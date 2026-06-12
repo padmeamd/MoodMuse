@@ -535,12 +535,12 @@ function authHeader() {
 // STATE
 // =====================================================================
 let selectedMood = 'nostalgic';
-let materialsBase64 = null;  // captured/uploaded image as data URI
-let currentProject = null;   // response from /api/projects/generate
-let captureBase64 = null;    // finished artifact photo
-let currentArtifact = null;  // response from /api/artifacts POST
-let museumData = null;       // response from /api/museum
-let selectedHallIndex = 0;
+let materialsBase64 = null;      // captured/uploaded image as data URI
+let detectedMaterials = [];      // from POST /api/materials
+let currentProject = null;       // { projectId, project, identity } from POST /api/conjure
+let captureBase64 = null;        // finished artifact photo
+let currentArtifact = null;      // from POST /api/artifact
+let museumData = null;           // from GET /api/museum
 
 const MOODS = [
   ['Nostalgic','#A86A82'],['Inspired','#D6B56E'],['Curious','#9B7FB0'],['Overwhelmed','#6E8FA8'],
@@ -548,7 +548,6 @@ const MOODS = [
   ['Creative','#C98AA6'],['Reflective','#9A93A8']
 ];
 const MOOD_ICONS = {nostalgic:'🌙',inspired:'✨',curious:'🎭',overwhelmed:'🌊',healing:'🌊',hopeful:'✨',ambitious:'🔥',lonely:'🌙',creative:'✨',reflective:'🌙'};
-const HALL_EMOJIS = {'Hall of Nostalgia':'🌙','Hall of Dreams':'✨','Hall of Healing':'🌊','Hall of Ambition':'🔥','Hall of Curiosity':'🎭'};
 
 const incantations = [
   'Opening the curiosity cabinet...',
@@ -564,7 +563,6 @@ const incantations = [
 const panels = () => [...document.querySelectorAll('.panel')];
 let cur = 0;
 
-// Build rail pips
 const rail = document.getElementById('rail');
 panels().forEach((_, i) => {
   const d = document.createElement('div');
@@ -615,12 +613,7 @@ function pickMatMode(mode) {
   document.getElementById('matUpload').classList.toggle('sel', mode === 'upload');
   document.getElementById('viewfinder').classList.toggle('visible', mode === 'camera');
   document.getElementById('uploadZone').classList.toggle('visible', mode === 'upload');
-
-  if (mode === 'camera') {
-    startCamera();
-  } else {
-    stopCamera();
-  }
+  if (mode === 'camera') { startCamera(); } else { stopCamera(); }
 }
 
 async function startCamera() {
@@ -639,10 +632,7 @@ async function startCamera() {
 }
 
 function stopCamera() {
-  if (cameraStream) {
-    cameraStream.getTracks().forEach(t => t.stop());
-    cameraStream = null;
-  }
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
 }
 
 function captureFromCamera() {
@@ -661,13 +651,9 @@ function handleMatFileSelect(input) {
   const reader = new FileReader();
   reader.onload = (e) => {
     materialsBase64 = e.target.result;
-    // Show preview in upload zone
-    const uzIco = document.getElementById('uzIco');
-    const uzText = document.getElementById('uzText');
-    const uzHint = document.getElementById('uzHint');
-    uzIco.innerHTML = `<img src="${materialsBase64}" style="max-width:100%;max-height:100px;border-radius:10px">`;
-    uzText.textContent = file.name;
-    uzHint.textContent = 'Ready to scan';
+    document.getElementById('uzIco').innerHTML = `<img src="${materialsBase64}" style="max-width:100%;max-height:100px;border-radius:10px">`;
+    document.getElementById('uzText').textContent = file.name;
+    document.getElementById('uzHint').textContent = 'Ready to scan';
   };
   reader.readAsDataURL(file);
 }
@@ -678,42 +664,34 @@ async function submitMaterials() {
   const chipsEl = document.getElementById('chips');
   chipsEl.innerHTML = '';
 
-  // Get image based on mode
   if (matMode === 'camera') {
     materialsBase64 = captureFromCamera();
-    if (!materialsBase64) {
-      // Fallback: open file picker with camera capture
-      document.getElementById('matCameraInput').click();
-      return;
-    }
+    if (!materialsBase64) { document.getElementById('matCameraInput').click(); return; }
     stopCamera();
   }
-
-  if (!materialsBase64) {
-    statusEl.textContent = 'Please select or capture an image first';
-    return;
-  }
+  if (!materialsBase64) { statusEl.textContent = 'Please select or capture an image first'; return; }
 
   btn.disabled = true;
-  statusEl.textContent = 'The curator is examining your materials...';
 
   try {
-    const res = await fetch(API_BASE + '/api/projects/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeader() },
-      body: JSON.stringify({ mood: selectedMood, imageBase64: materialsBase64 }),
-    });
+    // ---- Step 1: POST /api/materials — detect materials from image ----
+    statusEl.textContent = 'The curator is examining your materials...';
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || `Server error ${res.status}`);
+    const matRes = await fetch(API_BASE + '/api/materials', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageBase64: materialsBase64 }),
+    });
+    if (!matRes.ok) {
+      const err = await matRes.json().catch(() => ({}));
+      throw new Error(err.error || 'Material detection failed');
     }
 
-    currentProject = await res.json();
-    statusEl.textContent = '';
+    const matData = await matRes.json();
+    detectedMaterials = matData.materials || [];
 
     // Show detected materials as chips
-    (currentProject.detectedMaterials || []).forEach((m, i) => {
+    detectedMaterials.forEach((m, i) => {
       const s = document.createElement('span');
       s.className = 'chip';
       s.textContent = '✦ ' + m;
@@ -721,10 +699,24 @@ async function submitMaterials() {
       chipsEl.appendChild(s);
     });
 
-    // Populate project screen (4)
-    populateProject(currentProject);
+    // ---- Step 2: POST /api/conjure — generate project + identity ------
+    statusEl.textContent = 'The alchemist is designing your project...';
 
-    // Populate identity screen (5)
+    const conjRes = await fetch(API_BASE + '/api/conjure', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ moodKey: selectedMood, materials: detectedMaterials }),
+    });
+    if (!conjRes.ok) {
+      const err = await conjRes.json().catch(() => ({}));
+      throw new Error(err.error || 'Project generation failed');
+    }
+
+    currentProject = await conjRes.json();
+    statusEl.textContent = '';
+
+    // Populate screens 4 + 5
+    populateProject(currentProject);
     populateIdentity(currentProject);
 
     // Auto-advance after a beat
@@ -737,38 +729,39 @@ async function submitMaterials() {
 }
 
 // =====================================================================
-// PROJECT SCREEN (4) — populate from API response
+// PROJECT SCREEN (4) — populate from /api/conjure response
 // =====================================================================
-function populateProject(p) {
-  document.getElementById('projTitle').textContent = p.projectTitle || '...';
+function populateProject(data) {
+  const p = data.project;
+  document.getElementById('projTitle').textContent = p.title || '...';
   document.getElementById('projConcept').innerHTML = '<em>' + (p.concept || '') + '</em>';
-  document.getElementById('projWhyLabel').textContent = 'Why this, for ' + (p.mood || '');
-  document.getElementById('projWhy').textContent = p.emotionalExplanation || '';
-  document.getElementById('projMaterials').textContent = (p.detectedMaterials || []).join(' · ');
+  document.getElementById('projWhyLabel').textContent = 'Why this, for ' + selectedMood;
+  document.getElementById('projWhy').textContent = p.emotional_explanation || '';
+  document.getElementById('projMaterials').textContent = (p.materials_used || []).join(' · ');
 
   const stepsEl = document.getElementById('projSteps');
   stepsEl.innerHTML = '';
-  (p.instructions || []).forEach(s => {
+  (p.steps || []).forEach(s => {
     const li = document.createElement('li');
     li.textContent = s.text || s;
     stepsEl.appendChild(li);
   });
 
-  const time = (p.estimatedTime || '').replace(/[^\d]/g, '') || '--';
-  document.getElementById('projTime').textContent = time;
+  document.getElementById('projTime').textContent = p.est_minutes || '--';
   document.getElementById('projDiff').textContent = p.difficulty || '--';
-  document.getElementById('projMoodIcon').textContent = MOOD_ICONS[p.mood] || '✦';
-  document.getElementById('projMoodLabel').textContent = p.mood || 'mood';
+  document.getElementById('projMoodIcon').textContent = MOOD_ICONS[selectedMood] || '✦';
+  document.getElementById('projMoodLabel').textContent = selectedMood;
 }
 
 // =====================================================================
-// IDENTITY SCREEN (5) — populate from API response
+// IDENTITY SCREEN (5) — populate from /api/conjure response
 // =====================================================================
-function populateIdentity(p) {
-  document.getElementById('idTitle').textContent = p.museumTitle || '...';
-  document.getElementById('idArtifactName').textContent = p.projectTitle || '';
-  document.getElementById('idDescription').textContent = p.museumDescription || '';
-  document.getElementById('idMeaning').textContent = p.artifactMeaning || '';
+function populateIdentity(data) {
+  const id = data.identity;
+  document.getElementById('idTitle').textContent = id.museum_title || '...';
+  document.getElementById('idArtifactName').textContent = id.artifact_name || '';
+  document.getElementById('idDescription').textContent = id.museum_description || '';
+  document.getElementById('idMeaning').textContent = id.artifact_meaning || '';
 }
 
 // =====================================================================
@@ -780,8 +773,7 @@ function handleCaptureSelect(input) {
   const reader = new FileReader();
   reader.onload = (e) => {
     captureBase64 = e.target.result;
-    const ico = document.getElementById('captureIco');
-    ico.innerHTML = `<img src="${captureBase64}" style="max-width:100%;max-height:140px;border-radius:10px">`;
+    document.getElementById('captureIco').innerHTML = `<img src="${captureBase64}" style="max-width:100%;max-height:140px;border-radius:10px">`;
     document.getElementById('captureLabel').textContent = file.name;
     document.getElementById('captureHint').textContent = 'Ready to enshrine';
     document.getElementById('enshrineBtn').style.display = 'block';
@@ -790,7 +782,7 @@ function handleCaptureSelect(input) {
 }
 
 async function enshrineArtifact() {
-  if (!captureBase64 || !currentProject) return;
+  if (!currentProject) return;
 
   const statusEl = document.getElementById('captureStatus');
   const btn = document.getElementById('enshrineBtn');
@@ -798,19 +790,20 @@ async function enshrineArtifact() {
   statusEl.textContent = 'Preparing the pedestal...';
 
   try {
-    const res = await fetch(API_BASE + '/api/artifacts', {
+    const res = await fetch(API_BASE + '/api/artifact', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeader() },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        project_id: currentProject.projectId,
-        imageBase64: captureBase64,
-        generate_3d: false,  // set true if you have Tripo/Meshy keys
+        projectId: currentProject.projectId,
+        moodKey: selectedMood,
+        identity: currentProject.identity,
+        sourceImageUrl: null,
       }),
     });
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || `Server error ${res.status}`);
+      throw new Error(err.error || 'Enshrinement failed');
     }
 
     currentArtifact = await res.json();
@@ -839,7 +832,7 @@ function runForgeAnimation() {
   btn.style.opacity = 0;
   btn.style.pointerEvents = 'none';
 
-  title.textContent = currentArtifact?.artifactName || currentProject?.museumTitle || '...';
+  title.textContent = currentProject?.identity?.museum_title || '...';
 
   let i = 0;
   inc.textContent = incantations[0];
@@ -860,7 +853,7 @@ function runForgeAnimation() {
 }
 
 // =====================================================================
-// MUSEUM SCREEN (8) — load from API
+// MUSEUM SCREEN (8) — load from GET /api/museum
 // =====================================================================
 async function goMuseum() {
   go(7); // museum panel index
@@ -872,23 +865,19 @@ async function loadMuseum() {
   hallsEl.innerHTML = '';
 
   try {
-    const res = await fetch(API_BASE + '/api/museum', {
-      headers: authHeader(),
-    });
-
+    const res = await fetch(API_BASE + '/api/museum');
     if (!res.ok) throw new Error('Failed to load museum');
     museumData = await res.json();
 
-    (museumData.rooms || []).forEach((room, idx) => {
-      const count = room.artifacts?.length || 0;
-      const emoji = HALL_EMOJIS[room.name] || '✦';
+    (museumData.halls || []).forEach((hall, idx) => {
+      const count = hall.artifacts?.length || 0;
       const desc = count > 0
         ? `${count} artifact${count > 1 ? 's' : ''}`
         : 'empty · awaiting a feeling';
 
       const d = document.createElement('div');
       d.className = 'door';
-      d.innerHTML = `<span class="em">${emoji}</span><div class="info"><div class="hn">${room.name}</div><div class="hc">${desc}</div></div><span class="curtain"></span>`;
+      d.innerHTML = `<span class="em">${hall.emoji}</span><div class="info"><div class="hn">${hall.name}</div><div class="hc">${desc}</div></div><span class="curtain"></span>`;
       d.onclick = () => openHall(idx);
       hallsEl.appendChild(d);
     });
@@ -901,35 +890,27 @@ async function loadMuseum() {
 // HALL / GALLERY SCREEN (9) — show artifacts in selected hall
 // =====================================================================
 function openHall(idx) {
-  selectedHallIndex = idx;
-  const room = museumData.rooms[idx];
-  if (!room) return;
+  const hall = museumData.halls[idx];
+  if (!hall) return;
 
   const gallery = document.getElementById('galleryView');
   const titleEl = document.getElementById('galleryTitle');
-
-  // Clear old exhibits (keep ghall + gfloor)
   gallery.querySelectorAll('.exhibit').forEach(el => el.remove());
 
-  const count = room.artifacts?.length || 0;
-  const emoji = HALL_EMOJIS[room.name] || '✦';
-  titleEl.innerHTML = `${room.name}<span>${emoji} ${count} artifact${count !== 1 ? 's' : ''}</span>`;
+  const count = hall.artifacts?.length || 0;
+  titleEl.innerHTML = `${hall.name}<span>${hall.emoji} ${count} artifact${count !== 1 ? 's' : ''}</span>`;
 
-  // Position up to 5 artifacts
   const positions = ['12%', '30%', '50%', '70%', '88%'];
-  (room.artifacts || []).slice(0, 5).forEach((art, i) => {
+  (hall.artifacts || []).slice(0, 5).forEach((art, i) => {
     const exhibit = document.createElement('div');
     exhibit.className = 'exhibit';
-    const pos = positions[i] || '50%';
-    exhibit.style.left = pos;
-    if (i === Math.floor(count / 2)) {
-      exhibit.style.transform = 'translateX(-50%)';
-    }
+    exhibit.style.left = positions[i] || '50%';
+    if (i === Math.floor(count / 2)) exhibit.style.transform = 'translateX(-50%)';
     const size = i === Math.floor(count / 2) ? 'width:38px;height:50px' : 'width:30px;height:40px';
     exhibit.innerHTML = `
       <div class="minigem" style="${size}"></div>
       <div class="miniplinth"></div>
-      <div class="miniplaque">${art.artifactName || 'Unnamed'}</div>
+      <div class="miniplaque">${art.museum_title || art.artifact_name || 'Unnamed'}</div>
     `;
     gallery.appendChild(exhibit);
   });
@@ -939,11 +920,11 @@ function openHall(idx) {
     empty.className = 'exhibit';
     empty.style.left = '50%';
     empty.style.transform = 'translateX(-50%)';
-    empty.innerHTML = `<div class="miniplaque" style="font-size:11px;color:#c9bcc7">This hall awaits its first artifact</div>`;
+    empty.innerHTML = '<div class="miniplaque" style="font-size:11px;color:#c9bcc7">This hall awaits its first artifact</div>';
     gallery.appendChild(empty);
   }
 
-  go(8); // gallery panel
+  go(8);
 }
 
 // =====================================================================

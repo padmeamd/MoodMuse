@@ -1,115 +1,155 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { Mood, ClaudeProjectResponse } from "@/types";
-import { MOOD_TONE, MOOD_TO_ROOM } from "@/types";
+import type { Mood, ConjureResponse, HallKey } from "@/types";
+import { MOOD_TONE, MOOD_TO_HALL, HALLS } from "@/types";
 
 const anthropic = new Anthropic(); // reads ANTHROPIC_API_KEY from env
 
-const SYSTEM_PROMPT = `You are two voices inside a museum of feelings.
+// -- JSON parsing with repair --------------------------------------------
 
-Voice 1 — The Curator: You are shown a photograph. Identify ONLY the tangible, usable craft materials visible in the image. Ignore backgrounds, hands, furniture, and screens. Return plain, recognisable nouns a person would understand.
+function parseJSON<T>(raw: string): T {
+  // Strip markdown fences
+  let s = raw.trim()
+    .replace(/^```json?\s*\n?/i, "")
+    .replace(/\n?\s*```$/i, "");
 
-Voice 2 — The Alchemist & Archivist: Using the detected materials and the chosen mood, design a single creative project and name it as a museum artifact.
+  // First try clean parse
+  try { return JSON.parse(s); } catch { /* continue */ }
 
-Rules:
-- The project MUST use ONLY materials visible in the photograph.
-- It must be achievable in under 30 minutes.
-- It must feel emotionally specific to the mood — never generic.
-- Write as a poetic museum curator — specific, sincere, no cliches, no corporate or self-help language.
-- Do NOT say "express yourself creatively" or similar filler.
-- Return ONLY valid JSON, no markdown fences, no preamble.`;
+  // Repair: strip trailing commas before } or ]
+  s = s.replace(/,\s*([}\]])/g, "$1");
 
-function buildUserPrompt(mood: Mood): string {
-  const room = MOOD_TO_ROOM[mood];
-  const tone = MOOD_TONE[mood];
+  // Repair: try to extract first { ... } block
+  const match = s.match(/\{[\s\S]*\}/);
+  if (match) {
+    try { return JSON.parse(match[0]); } catch { /* continue */ }
+  }
 
-  return `The visitor is feeling: **${mood}**
-Tone guidance: ${tone}
-Museum room: ${room}
+  throw new Error(`Failed to parse JSON: ${raw.slice(0, 300)}`);
+}
 
-Look at the attached photograph. First identify every usable material. Then design one project and its museum identity.
+// -- Material detection ---------------------------------------------------
 
-Return ONLY this JSON structure:
+const MATERIALS_SYSTEM = `You are the Curator of a museum of feelings.
+You are shown a photograph of objects and craft materials.
+Identify only tangible, usable creative materials visible with confidence.
+Ignore furniture, walls, people, screens, and background objects unless they are clearly being used as materials.
+Return JSON only.
+
+Required JSON:
 {
-  "detectedMaterials": ["material1", "material2"],
-  "projectTitle": "string",
-  "concept": "1-2 sentence description",
-  "emotionalExplanation": "why this project answers this feeling",
-  "materialsUsed": ["subset of detected materials actually used"],
-  "instructions": [{"step": 1, "text": "..."}],
-  "estimatedTime": "e.g. 20 minutes",
-  "difficulty": "Gentle | Considered | Devoted",
-  "museumTitle": "evocative title, e.g. The Stars I Followed Home",
-  "museumDescription": "poetic plaque text, 2-3 sentences",
-  "artifactMeaning": "what this object preserves for its maker",
-  "museumRoom": "${room}"
+  "materials": ["item 1", "item 2"]
+}`;
+
+export async function detectMaterials(imageBase64: string): Promise<string[]> {
+  const cleaned = imageBase64.replace(/^data:image\/[^;]+;base64,/, "");
+  const mimeMatch = imageBase64.match(/^data:(image\/[^;]+);base64,/);
+  const mediaType = (mimeMatch?.[1] ?? "image/jpeg") as
+    "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 500,
+    system: MATERIALS_SYSTEM,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image", source: { type: "base64", media_type: mediaType, data: cleaned } },
+        { type: "text", text: "What usable craft/creative materials do you see? Return JSON only." },
+      ],
+    }],
+  });
+
+  const text = response.content.find((b) => b.type === "text");
+  if (!text || text.type !== "text") throw new Error("Claude returned no text");
+
+  const parsed = parseJSON<{ materials: string[] }>(text.text);
+  if (!Array.isArray(parsed.materials)) throw new Error("Claude response missing materials array");
+
+  return parsed.materials;
+}
+
+// -- Project + identity generation ----------------------------------------
+
+function buildConjureSystem(moodKey: Mood, hallKey: HallKey): string {
+  const hall = HALLS.find((h) => h.key === hallKey);
+  const tone = MOOD_TONE[moodKey];
+
+  return `You are MoodMuse, an AI curator inside a magical museum of feelings.
+
+You transform a user's mood and available materials into one meaningful creative project.
+
+The project must:
+- use only the listed materials
+- be achievable in under 30 minutes
+- feel emotionally meaningful
+- avoid generic craft ideas
+- feel like creating a museum artifact, not following a basic tutorial
+- match the mood
+- be specific and practical
+
+The visual style is:
+- magical museum
+- celestial theatre
+- Victorian curiosity cabinet
+- vintage carousel
+- velvet curtains
+- moons, stars, gold plaques, memory rooms
+
+The visitor is feeling: ${moodKey}
+Tone guidance: ${tone}
+Museum hall: ${hall?.name ?? "Unknown"} (key: ${hallKey})
+
+Return strict JSON only. No markdown fences. No preamble.
+
+Required JSON:
+{
+  "project": {
+    "title": "string",
+    "concept": "string",
+    "emotional_explanation": "string",
+    "materials_used": ["string"],
+    "steps": [{"n": 1, "text": "string"}],
+    "est_minutes": 20,
+    "difficulty": "Gentle"
+  },
+  "identity": {
+    "artifact_name": "string",
+    "museum_title": "string",
+    "museum_description": "string",
+    "artifact_meaning": "string",
+    "hall_key": "${hallKey}"
+  }
 }`;
 }
 
-/**
- * Send a materials photo + mood to Claude Vision and get back a structured
- * creative project with museum identity.
- */
-export async function generateProject(
-  mood: Mood,
-  imageBase64: string
-): Promise<ClaudeProjectResponse> {
-  // Strip data-uri prefix if present
-  const cleaned = imageBase64.replace(/^data:image\/\w+;base64,/, "");
-  const mimeMatch = imageBase64.match(/^data:(image\/\w+);base64,/);
-  const mediaType = (mimeMatch?.[1] ?? "image/jpeg") as
-    | "image/jpeg"
-    | "image/png"
-    | "image/gif"
-    | "image/webp";
+export async function conjureProject(
+  moodKey: Mood,
+  materials: string[]
+): Promise<ConjureResponse> {
+  const hallKey = MOOD_TO_HALL[moodKey];
 
   const response = await anthropic.messages.create({
     model: "claude-sonnet-4-20250514",
     max_tokens: 1500,
-    system: SYSTEM_PROMPT,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "image",
-            source: { type: "base64", media_type: mediaType, data: cleaned },
-          },
-          { type: "text", text: buildUserPrompt(mood) },
-        ],
-      },
-    ],
+    system: buildConjureSystem(moodKey, hallKey),
+    messages: [{
+      role: "user",
+      content: `Materials available: ${materials.join(", ")}\n\nCreate one project. Return JSON only.`,
+    }],
   });
 
-  const textBlock = response.content.find((b) => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    throw new Error("Claude returned no text content");
-  }
+  const text = response.content.find((b) => b.type === "text");
+  if (!text || text.type !== "text") throw new Error("Claude returned no text");
 
-  const raw = textBlock.text.trim();
-
-  // Attempt to parse — strip potential markdown fences just in case
-  const jsonStr = raw.replace(/^```json?\n?/, "").replace(/\n?```$/, "");
-
-  let parsed: ClaudeProjectResponse;
-  try {
-    parsed = JSON.parse(jsonStr);
-  } catch {
-    throw new Error(`Claude returned invalid JSON: ${raw.slice(0, 200)}`);
-  }
+  const parsed = parseJSON<ConjureResponse>(text.text);
 
   // Validate required fields
-  const required = [
-    "detectedMaterials",
-    "projectTitle",
-    "concept",
-    "instructions",
-    "museumTitle",
-  ] as const;
-  for (const key of required) {
-    if (!parsed[key]) {
-      throw new Error(`Claude response missing required field: ${key}`);
-    }
-  }
+  if (!parsed.project?.title) throw new Error("Missing project.title");
+  if (!parsed.project?.steps?.length) throw new Error("Missing project.steps");
+  if (!parsed.identity?.museum_title) throw new Error("Missing identity.museum_title");
+
+  // Ensure hall_key matches
+  parsed.identity.hall_key = hallKey;
 
   return parsed;
 }

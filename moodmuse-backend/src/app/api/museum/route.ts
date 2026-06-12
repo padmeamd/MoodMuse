@@ -1,36 +1,15 @@
 import { NextResponse } from "next/server";
-import { IS_DEMO, demoDb } from "@/lib/demo";
-
-const ROOMS = [
-  { name: "Hall of Nostalgia", emoji: "🌙", moods: ["nostalgic", "reflective", "lonely"] },
-  { name: "Hall of Dreams", emoji: "✨", moods: ["hopeful", "inspired", "creative"] },
-  { name: "Hall of Healing", emoji: "🌊", moods: ["healing", "overwhelmed"] },
-  { name: "Hall of Ambition", emoji: "🔥", moods: ["ambitious"] },
-  { name: "Hall of Curiosity", emoji: "🎭", moods: ["curious"] },
-];
+import { HALLS } from "@/types";
+import { IS_DEMO, DEMO_USER_ID, demoDb } from "@/lib/demo";
+import { HAS_SUPABASE, supabaseAdmin } from "@/lib/supabase";
+import type { ArtifactRow } from "@/types";
 
 export async function GET() {
   try {
-    let allArtifacts: {
-      id: string;
-      artifact_name: string;
-      mood: string;
-      final_image_url: string | null;
-      model_3d_url: string | null;
-      model_3d_status: string;
-      museum_room: string;
-      museum_description: string;
-      created_at: string;
-    }[];
+    let allArtifacts: ArtifactRow[];
 
-    if (IS_DEMO) {
-      allArtifacts = demoDb.getAllArtifacts();
-    } else {
-      const { requireUser } = await import("@/lib/auth");
-      const { supabaseAdmin } = await import("@/lib/supabase");
-
-      const userId = await requireUser();
-
+    if (HAS_SUPABASE && supabaseAdmin) {
+      const userId = DEMO_USER_ID; // TODO: replace with real auth
       const { data, error } = await supabaseAdmin
         .from("artifacts")
         .select("*")
@@ -39,37 +18,43 @@ export async function GET() {
 
       if (error) {
         return NextResponse.json(
-          { error: "Failed to fetch museum", detail: error.message },
+          { error: "Failed to fetch museum", details: error.message },
           { status: 500 }
         );
       }
-      allArtifacts = data ?? [];
+      allArtifacts = (data ?? []) as ArtifactRow[];
+    } else {
+      allArtifacts = demoDb.getAllArtifacts();
     }
 
-    const rooms = ROOMS.map((room) => ({
-      name: room.name,
-      emoji: room.emoji,
-      moods: room.moods,
+    const halls = HALLS.map((hall) => ({
+      key: hall.key,
+      name: hall.name,
+      emoji: hall.emoji,
       artifacts: allArtifacts
-        .filter((a) => a.museum_room === room.name)
+        .filter((a) => a.hall_key === hall.key)
         .map((a) => ({
-          artifactId: a.id,
-          artifactName: a.artifact_name,
-          mood: a.mood,
-          finalImageUrl: a.final_image_url,
-          model3dUrl: a.model_3d_url,
-          model3dStatus: a.model_3d_status,
-          museumDescription: a.museum_description,
-          createdAt: a.created_at,
+          id: a.id,
+          artifact_name: a.artifact_name,
+          museum_title: a.museum_title,
+          museum_description: a.museum_description,
+          artifact_meaning: a.artifact_meaning,
+          mood_key: a.mood_key,
+          source_image_url: a.source_image_url,
+          glb_url: a.glb_url,
+          model_status: a.model_status,
+          created_at: a.created_at,
         })),
     }));
 
-    return NextResponse.json({ rooms });
+    return NextResponse.json({ halls });
+
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    if (message.includes("Unauthorized")) {
-      return NextResponse.json({ error: message }, { status: 401 });
-    }
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    console.error("GET /api/museum", message);
+    return NextResponse.json(
+      { error: "Failed to load museum", details: message },
+      { status: 500 }
+    );
   }
 }
