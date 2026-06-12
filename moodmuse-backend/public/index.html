@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MoodMuse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  :root{
+    --bg:#F8F4EE;
+    --plum:#4B324F;
+    --plum-deep:#2E1F31;
+    --rose:#A86A82;
+    --gold:#D6B56E;
+    --gold-bright:#E8CD93;
+    --moon:#E7E1D7;
+    --ink:#3A2A3D;
+    --serif:'Fraunces',Georgia,serif;
+    --sans:'Inter',-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:var(--sans);
+    color:var(--moon);
+    background:radial-gradient(120% 90% at 50% -10%, #5b3f60 0%, var(--plum) 38%, var(--plum-deep) 100%);
+    min-height:100%;
+    display:flex;flex-direction:column;align-items:center;
+    padding:28px 16px 40px;
+    overflow-x:hidden;
+  }
+  #stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .wrap{position:relative;z-index:1;width:100%;max-width:440px;display:flex;flex-direction:column;align-items:center;gap:18px}
+  .brand{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+  .brand .mark{font-family:var(--serif);font-weight:500;font-size:13px;letter-spacing:.42em;text-transform:uppercase;color:var(--gold)}
+  .brand h1{font-family:var(--serif);font-weight:400;font-style:italic;font-size:30px;margin:0;color:var(--moon);letter-spacing:.01em}
+  .brand .sub{font-size:12.5px;color:#cdbfca;letter-spacing:.02em}
+  .rail{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:center;max-width:360px}
+  .pip{width:9px;height:9px;border-radius:50%;background:rgba(231,225,215,.22);transition:.4s;cursor:pointer}
+  .pip.done{background:var(--rose)}
+  .pip.active{background:var(--gold);box-shadow:0 0 0 4px rgba(214,181,110,.22);transform:scale(1.15)}
+  .device{
+    width:100%;max-width:390px;aspect-ratio:9/19;
+    border-radius:42px;padding:11px;
+    background:linear-gradient(160deg,#6a4a6f,#2c1d2f);
+    box-shadow:0 40px 80px -30px rgba(0,0,0,.7), inset 0 0 0 1px rgba(214,181,110,.28), 0 0 0 1px rgba(0,0,0,.3);
+    position:relative;
+  }
+  .screen{position:relative;width:100%;height:100%;border-radius:32px;overflow:hidden;background:var(--bg);color:var(--ink)}
+  .panel{position:absolute;inset:0;display:none;flex-direction:column;opacity:0}
+  .panel.on{display:flex;animation:rise .65s cubic-bezier(.2,.7,.2,1) forwards}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .night{background:radial-gradient(130% 80% at 50% 0%, #5b3f60, var(--plum) 45%, var(--plum-deep));color:var(--moon)}
+  .pad{padding:30px 26px;display:flex;flex-direction:column;height:100%;overflow:auto;min-height:0}
+  .eyebrow{font-family:var(--sans);font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);margin:0 0 12px}
+  .ask{font-family:var(--serif);font-weight:400;font-size:25px;line-height:1.22;margin:0}
+  .ask em{font-style:italic;color:var(--rose)}
+  .night .ask em{color:var(--gold-bright)}
+  .btn{
+    font-family:var(--serif);font-size:16px;font-style:italic;letter-spacing:.02em;
+    color:var(--plum-deep);background:linear-gradient(165deg,var(--gold-bright),var(--gold));
+    border:none;border-radius:30px;padding:13px 22px;cursor:pointer;
+    box-shadow:0 10px 22px -10px rgba(214,181,110,.8);transition:transform .2s,filter .2s;
+  }
+  .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
+  .btn:active{transform:translateY(0)}
+  .btn.ghost{background:none;color:var(--moon);box-shadow:none;border:1px solid rgba(231,225,215,.35)}
+  .btn:disabled{opacity:.5;cursor:default;transform:none;filter:none}
+  .moon-disc{width:96px;height:96px;border-radius:50%;
+    background:radial-gradient(circle at 38% 34%, #fff8ea, var(--moon) 55%, #b9aeb8 100%);
+    box-shadow:0 0 60px 8px rgba(231,225,215,.35), inset -10px -8px 26px rgba(75,50,79,.4);
+    margin:0 auto;animation:float 7s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  .moodgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:18px;overflow:auto;padding-right:2px}
+  .orb{position:relative;border:1px solid rgba(231,225,215,.18);border-radius:16px;padding:14px 12px;
+    background:rgba(255,255,255,.04);cursor:pointer;text-align:left;transition:.25s;overflow:hidden}
+  .orb:hover{border-color:rgba(214,181,110,.5);background:rgba(214,181,110,.08)}
+  .orb .dot{width:22px;height:22px;border-radius:50%;margin-bottom:9px;box-shadow:0 0 16px 1px currentColor;display:block}
+  .orb .nm{font-family:var(--serif);font-size:16px;color:var(--moon)}
+  .orb.sel{border-color:var(--gold);background:rgba(214,181,110,.14);box-shadow:0 0 0 1px var(--gold) inset, 0 12px 26px -14px rgba(214,181,110,.7)}
+  .orb.sel::after{content:'✦';position:absolute;top:8px;right:11px;color:var(--gold);font-size:12px}
+
+  /* materials */
+  .mat-options{display:flex;gap:10px;margin-top:14px;flex-shrink:0}
+  .mat-opt{flex:1;display:flex;flex-direction:row;align-items:center;gap:10px;
+    padding:12px 14px;border-radius:14px;border:1.5px solid rgba(231,225,215,.18);
+    background:rgba(255,255,255,.04);cursor:pointer;transition:.25s;text-align:left}
+  .mat-opt:hover{border-color:rgba(214,181,110,.5);background:rgba(214,181,110,.08)}
+  .mat-opt.sel{border-color:var(--gold);background:rgba(214,181,110,.14);box-shadow:0 0 0 1px var(--gold) inset, 0 12px 26px -14px rgba(214,181,110,.7)}
+  .mat-opt .mat-ico{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+    background:radial-gradient(circle at 40% 36%,rgba(214,181,110,.22),rgba(168,106,130,.15));
+    border:1px solid rgba(214,181,110,.3)}
+  .mat-opt .mat-label{font-family:var(--serif);font-size:14px;color:var(--moon);line-height:1.25}
+  .mat-opt .mat-hint{font-size:10.5px;color:#c9bcc7;line-height:1.3;margin-top:2px}
+  .viewfinder{flex:1;margin:14px 0 0;border-radius:20px;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#3a2a3d,#2c1d2f);min-height:120px;display:none}
+  .viewfinder.visible{display:block}
+  .viewfinder video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:20px}
+  .viewfinder .vf-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:#c9bcc7;text-align:center;padding:20px}
+  .corner{position:absolute;width:24px;height:24px;border:2px solid var(--gold);opacity:.85;z-index:2}
+  .c1{top:16px;left:16px;border-right:0;border-bottom:0;border-radius:8px 0 0 0}
+  .c2{top:16px;right:16px;border-left:0;border-bottom:0;border-radius:0 8px 0 0}
+  .c3{bottom:16px;left:16px;border-right:0;border-top:0;border-radius:0 0 0 8px}
+  .c4{bottom:16px;right:16px;border-left:0;border-top:0;border-radius:0 0 8px 0}
+  .scan{position:absolute;left:14px;right:14px;height:2px;border-radius:2px;z-index:2;
+    background:linear-gradient(90deg,transparent,var(--gold-bright),transparent);
+    box-shadow:0 0 14px 2px rgba(214,181,110,.6);animation:scan 2.4s ease-in-out infinite}
+  @keyframes scan{0%,100%{top:18px}50%{top:calc(100% - 20px)}}
+  .upload-zone{flex:1;margin:14px 0 0;border-radius:20px;position:relative;overflow:hidden;display:none;
+    border:2px dashed rgba(214,181,110,.45);background:rgba(214,181,110,.05);
+    flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:22px;min-height:140px}
+  .upload-zone.visible{display:flex}
+  .upload-zone .uz-ico{font-size:36px;opacity:.85}
+  .upload-zone .uz-text{font-family:var(--serif);font-style:italic;font-size:16px;color:var(--moon)}
+  .upload-zone .uz-hint{font-size:11.5px;color:#c9bcc7;max-width:200px;line-height:1.4}
+  .upload-zone img{max-width:100%;max-height:120px;border-radius:10px;object-fit:contain}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+  .chip{font-size:12px;letter-spacing:.02em;color:var(--plum-deep);background:linear-gradient(160deg,var(--gold-bright),var(--gold));
+    padding:6px 11px;border-radius:20px;opacity:0;transform:translateY(8px) scale(.96);animation:pop .5s forwards}
+  @keyframes pop{to{opacity:1;transform:none}}
+  .mat-submit{margin-top:12px;align-self:center;flex-shrink:0}
+
+  /* plaque */
+  .plaque{background:linear-gradient(180deg,#fffdf8,#f3ecdf);
+    border-radius:14px;padding:20px 19px;color:var(--ink);
+    border:1px solid rgba(214,181,110,.7);
+    box-shadow:0 0 0 4px rgba(255,255,255,.5) inset, 0 18px 40px -22px rgba(46,31,49,.55);
+    position:relative;overflow:auto;flex:1;min-height:0}
+  .plaque::before{content:'';position:absolute;inset:7px;border:1px solid rgba(214,181,110,.55);border-radius:9px;pointer-events:none}
+  .seal{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--rose);text-align:center;margin-bottom:6px}
+  .ptitle{font-family:var(--serif);font-size:23px;line-height:1.16;font-weight:400;color:var(--plum);text-align:center;margin:0 0 4px}
+  .ptitle.it{font-style:italic}
+  .rule{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:11px 0}
+  .lbl{font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--rose);margin:12px 0 4px;font-weight:600}
+  .txt{font-size:13px;line-height:1.5;color:#4a3a4d;margin:0}
+  .txt.serif{font-family:var(--serif);font-style:italic;font-size:14.5px;color:var(--plum)}
+  ol.steps{margin:5px 0 0;padding-left:0;list-style:none;counter-reset:s}
+  ol.steps li{counter-increment:s;font-size:12.5px;line-height:1.45;color:#4a3a4d;padding:6px 0 6px 30px;position:relative;border-top:1px solid rgba(214,181,110,.25)}
+  ol.steps li:first-child{border-top:0}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:6px;width:21px;height:21px;border-radius:50%;
+    background:var(--plum);color:var(--gold);font-family:var(--serif);font-size:12px;display:flex;align-items:center;justify-content:center}
+  .meta{display:flex;gap:8px;margin-top:13px}
+  .badge{flex:1;text-align:center;border:1px solid rgba(214,181,110,.6);border-radius:10px;padding:8px 4px}
+  .badge b{display:block;font-family:var(--serif);font-size:16px;color:var(--plum)}
+  .badge span{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--rose)}
+
+  /* capture */
+  .dropframe{flex:1;margin:20px 0;border:2px dashed rgba(214,181,110,.6);border-radius:18px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:22px;
+    background:rgba(214,181,110,.05)}
+  .dropframe .ico{font-size:38px}
+  .dropframe .hint{font-size:12.5px;color:#6a5a6c;max-width:200px;line-height:1.45}
+  .dropframe img{max-width:100%;max-height:140px;border-radius:10px;object-fit:contain}
+
+  /* forge */
+  .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center}
+  .incant{font-family:var(--serif);font-style:italic;font-size:18px;color:var(--gold-bright);min-height:24px}
+  .scene{position:relative;width:160px;height:200px;perspective:600px}
+  .plinth{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:120px;height:30px;border-radius:50%/40%;
+    background:radial-gradient(circle at 50% 30%, #6a4a6f, #2c1d2f);box-shadow:0 14px 30px -10px rgba(0,0,0,.6)}
+  .spot{position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:160px;height:200px;
+    background:radial-gradient(ellipse 60% 70% at 50% 30%, rgba(231,225,215,.28), transparent 70%);pointer-events:none}
+  .gem{position:absolute;top:34px;left:50%;width:74px;height:96px;margin-left:-37px;
+    transform-style:preserve-3d;animation:spin 9s linear infinite}
+  @keyframes spin{to{transform:rotateY(360deg)}}
+  .facet{position:absolute;inset:0;clip-path:polygon(50% 0,100% 35%,82% 100%,18% 100%,0 35%);
+    background:linear-gradient(160deg,var(--gold-bright),var(--rose) 60%,var(--plum));
+    box-shadow:0 0 30px rgba(214,181,110,.5)}
+  .facet.b{transform:rotateY(60deg);opacity:.85}
+  .facet.c{transform:rotateY(120deg);opacity:.7}
+  .forming .gem{filter:blur(2px) brightness(1.3);opacity:.5}
+
+  /* halls */
+  .halls{display:flex;flex-direction:column;gap:11px;margin-top:16px;overflow:auto;flex:1;min-height:0;padding-right:2px}
+  .door{display:flex;align-items:center;gap:14px;border:1px solid rgba(231,225,215,.16);border-radius:16px;
+    padding:14px 16px;cursor:pointer;transition:.25s;position:relative;overflow:hidden;
+    background:linear-gradient(100deg,rgba(168,106,130,.12),rgba(255,255,255,.03))}
+  .door:hover{border-color:rgba(214,181,110,.55);transform:translateX(2px)}
+  .door .em{font-size:26px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))}
+  .door .info{flex:1}
+  .door .hn{font-family:var(--serif);font-size:18px;color:var(--moon)}
+  .door .hc{font-size:11px;color:#c9bcc7;letter-spacing:.04em}
+  .door .curtain{position:absolute;top:0;bottom:0;right:0;width:26px;
+    background:repeating-linear-gradient(90deg,rgba(168,106,130,.55),rgba(168,106,130,.55) 4px,rgba(75,50,79,.55) 4px,rgba(75,50,79,.55) 8px);
+    border-left:1px solid var(--gold);opacity:.55}
+
+  /* gallery */
+  .gallery{flex:1;margin-top:16px;border-radius:18px;position:relative;overflow:hidden;min-height:0;
+    background:radial-gradient(120% 80% at 50% 0,#5b3f60,#2c1d2f)}
+  .gfloor{position:absolute;left:0;right:0;bottom:0;height:42%;
+    background:linear-gradient(180deg,rgba(75,50,79,.2),rgba(46,31,49,.85));
+    border-top:1px solid rgba(214,181,110,.2)}
+  .exhibit{position:absolute;bottom:18%;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .minigem{width:30px;height:40px;clip-path:polygon(50% 0,100% 35%,82% 100%,18% 100%,0 35%);
+    background:linear-gradient(160deg,var(--gold-bright),var(--rose));box-shadow:0 0 18px rgba(214,181,110,.5);animation:float 6s ease-in-out infinite}
+  .miniplinth{width:46px;height:12px;border-radius:50%/40%;background:radial-gradient(circle at 50% 30%,#6a4a6f,#2c1d2f)}
+  .miniplaque{font-family:var(--serif);font-style:italic;font-size:8.5px;color:var(--gold-bright);text-align:center;max-width:74px;line-height:1.2}
+  .ghall{position:absolute;top:14px;left:0;right:0;text-align:center;font-family:var(--serif);font-size:17px;color:var(--moon)}
+  .ghall span{display:block;font-family:var(--sans);font-size:9.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-top:3px}
+
+  /* nav */
+  .nav{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:390px;gap:10px}
+  .nav .name{font-family:var(--serif);font-style:italic;font-size:14px;color:var(--moon);flex:1;text-align:center}
+  .nb{font-family:var(--sans);font-size:13px;color:var(--moon);background:rgba(255,255,255,.06);
+    border:1px solid rgba(231,225,215,.22);border-radius:22px;padding:9px 16px;cursor:pointer;transition:.2s}
+  .nb:hover{border-color:var(--gold);color:var(--gold-bright)}
+  .nb[disabled]{opacity:.3;cursor:default}
+  :focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px}
+  .credit{font-size:10.5px;color:#9d8fa0;letter-spacing:.04em;text-align:center;max-width:360px}
+
+  /* auth overlay */
+  .auth-overlay{position:fixed;inset:0;z-index:100;background:rgba(46,31,49,.92);
+    display:flex;align-items:center;justify-content:center}
+  .auth-overlay.hidden{display:none}
+  .auth-box{background:linear-gradient(180deg,#fffdf8,#f3ecdf);border-radius:20px;padding:36px 30px;
+    width:90%;max-width:360px;text-align:center;color:var(--ink);
+    box-shadow:0 30px 60px -20px rgba(0,0,0,.5);border:1px solid rgba(214,181,110,.5)}
+  .auth-box h2{font-family:var(--serif);font-weight:400;font-size:24px;margin:0 0 6px;color:var(--plum)}
+  .auth-box p{font-size:13px;color:#6a5a6c;margin:0 0 20px}
+  .auth-box input{width:100%;padding:12px 14px;border:1px solid rgba(214,181,110,.5);border-radius:10px;
+    font-family:var(--sans);font-size:14px;margin-bottom:10px;background:#fff;color:var(--ink)}
+  .auth-box .btn{width:100%;margin-top:6px}
+  .auth-box .toggle{font-size:12px;color:var(--rose);cursor:pointer;margin-top:14px;display:inline-block}
+  .auth-box .auth-err{color:#c0392b;font-size:12px;margin-top:8px;min-height:18px}
+
+  /* status bar */
+  .status-bar{font-size:11px;color:var(--gold);letter-spacing:.02em;min-height:16px;text-align:center}
+
+  @media (max-width:430px){ .brand h1{font-size:26px} .pad{padding:26px 20px}
+    .mat-opt .mat-hint{display:none}
+    .mat-opt{padding:14px 10px;gap:8px}
+    .mat-opt .mat-ico{width:44px;height:44px;font-size:20px}
+    .mat-opt .mat-label{font-size:13.5px}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important}}
+</style>
+
+<!-- Auth overlay -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-box">
+    <h2>Enter the Museum</h2>
+    <p id="authSubtext">Sign in to begin your journey</p>
+    <input type="email" id="authEmail" placeholder="Email">
+    <input type="password" id="authPassword" placeholder="Password">
+    <button class="btn" id="authBtn" onclick="handleAuth()">Sign in</button>
+    <div class="toggle" id="authToggle" onclick="toggleAuthMode()">Need an account? Sign up</div>
+    <div class="auth-err" id="authErr"></div>
+  </div>
+</div>
+
+<canvas id="stars"></canvas>
+
+<div class="wrap">
+  <div class="brand">
+    <div class="mark">A Museum of Feelings</div>
+    <h1>MoodMuse</h1>
+    <div class="sub" id="userGreeting">Sign in to begin</div>
+  </div>
+
+  <div class="rail" id="rail"></div>
+
+  <div class="device">
+    <div class="screen">
+
+      <!-- 1 THRESHOLD -->
+      <section class="panel night" data-name="Threshold">
+        <div class="pad" style="justify-content:center;text-align:center;gap:22px">
+          <div class="moon-disc"></div>
+          <div>
+            <p class="eyebrow" style="text-align:center">You are about to enter</p>
+            <h2 class="ask" style="font-size:30px">A museum that <em>remembers</em> how you felt.</h2>
+          </div>
+          <p class="txt" style="color:#cdbfca;max-width:240px;margin:0 auto">Every feeling you transform here leaves something behind you can walk through later.</p>
+          <button class="btn" onclick="next()">Enter the museum</button>
+        </div>
+      </section>
+
+      <!-- 2 MOOD -->
+      <section class="panel night" data-name="Choose a feeling">
+        <div class="pad">
+          <p class="eyebrow">Step one · The threshold</p>
+          <h2 class="ask">What feeling would you like to <em>transform</em> today?</h2>
+          <div class="moodgrid" id="moodgrid"></div>
+        </div>
+      </section>
+
+      <!-- 3 MATERIALS -->
+      <section class="panel night" data-name="Gather materials">
+        <div class="pad">
+          <p class="eyebrow">Step two · The cabinet</p>
+          <h2 class="ask">Show me what is <em>within reach</em>.</h2>
+          <div class="mat-options">
+            <button class="mat-opt sel" onclick="pickMatMode('camera')" id="matCamera">
+              <div class="mat-ico">📷</div>
+              <div><div class="mat-label">Take a photo</div>
+              <div class="mat-hint">Open your camera and capture what's nearby</div></div>
+            </button>
+            <button class="mat-opt" onclick="pickMatMode('upload')" id="matUpload">
+              <div class="mat-ico">🖼️</div>
+              <div><div class="mat-label">Upload a photo</div>
+              <div class="mat-hint">Choose an image from your device</div></div>
+            </button>
+          </div>
+          <div class="viewfinder visible" id="viewfinder">
+            <video id="cameraFeed" autoplay playsinline muted></video>
+            <div class="vf-placeholder" id="vfPlaceholder">Tap below to open camera</div>
+            <span class="corner c1"></span><span class="corner c2"></span>
+            <span class="corner c3"></span><span class="corner c4"></span>
+            <div class="scan"></div>
+          </div>
+          <div class="upload-zone" id="uploadZone">
+            <div class="uz-ico" id="uzIco">📂</div>
+            <div class="uz-text" id="uzText">Drop your image here</div>
+            <div class="uz-hint" id="uzHint">or tap below to browse your files</div>
+            <button class="btn" style="font-size:14px;padding:10px 20px" onclick="document.getElementById('matFileInput').click()">Choose file</button>
+          </div>
+          <input type="file" id="matFileInput" accept="image/*" style="display:none" onchange="handleMatFileSelect(this)">
+          <input type="file" id="matCameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleMatFileSelect(this)">
+          <div class="chips" id="chips"></div>
+          <div class="status-bar" id="matStatus"></div>
+          <button class="btn mat-submit" id="matSubmitBtn" onclick="submitMaterials()">Scan my materials</button>
+        </div>
+      </section>
+
+      <!-- 4 PROJECT (populated dynamically) -->
+      <section class="panel" data-name="The project">
+        <div class="pad">
+          <div class="plaque" id="projectPlaque">
+            <div class="seal">✦ The Alchemist's Plan ✦</div>
+            <h3 class="ptitle" id="projTitle">...</h3>
+            <div class="rule"></div>
+            <p class="txt" id="projConcept"><em>Waiting for your materials...</em></p>
+            <div class="lbl" id="projWhyLabel">Why this project</div>
+            <p class="txt" id="projWhy"></p>
+            <div class="lbl">From your cabinet</div>
+            <p class="txt" id="projMaterials"></p>
+            <div class="lbl">The making</div>
+            <ol class="steps" id="projSteps"></ol>
+            <div class="meta" id="projMeta">
+              <div class="badge"><b id="projTime">--</b><span>minutes</span></div>
+              <div class="badge"><b id="projDiff">--</b><span>difficulty</span></div>
+              <div class="badge"><b id="projMoodIcon">--</b><span id="projMoodLabel">mood</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5 IDENTITY (populated dynamically) -->
+      <section class="panel night" data-name="Its name & plaque">
+        <div class="pad">
+          <p class="eyebrow">Step four · Before it exists</p>
+          <h2 class="ask" style="margin-bottom:14px">It already has a <em>name</em>.</h2>
+          <div class="plaque" style="flex:0 1 auto">
+            <div class="seal">✦ Permanent Collection ✦</div>
+            <h3 class="ptitle it" id="idTitle">...</h3>
+            <div class="rule"></div>
+            <div class="lbl">Artifact</div>
+            <p class="txt" id="idArtifactName"></p>
+            <div class="lbl">From the curator</div>
+            <p class="txt serif" id="idDescription"></p>
+            <div class="lbl">What it keeps</div>
+            <p class="txt" id="idMeaning"></p>
+          </div>
+          <button class="btn" style="margin-top:16px;align-self:center" onclick="next()">I'll go make it</button>
+        </div>
+      </section>
+
+      <!-- 6 CAPTURE -->
+      <section class="panel" data-name="Capture the made thing">
+        <div class="pad">
+          <p class="eyebrow" style="color:var(--rose)">Step five · The unveiling</p>
+          <h2 class="ask" style="color:var(--plum)">You made it. Now <span style="color:var(--rose);font-style:italic">place it</span> on the pedestal.</h2>
+          <div class="dropframe" id="captureDropframe">
+            <div class="ico" id="captureIco">🖼️</div>
+            <div style="font-family:var(--serif);font-style:italic;font-size:18px;color:var(--plum)" id="captureLabel">Photograph your finished artifact</div>
+            <div class="hint" id="captureHint">Hold it to the light, one clear angle. The museum will do the rest.</div>
+            <button class="btn" onclick="document.getElementById('captureFileInput').click()">Upload the photograph</button>
+          </div>
+          <input type="file" id="captureFileInput" accept="image/*" style="display:none" onchange="handleCaptureSelect(this)">
+          <div class="status-bar" id="captureStatus"></div>
+          <button class="btn" id="enshrineBtn" style="display:none;align-self:center;margin-top:10px" onclick="enshrineArtifact()">Enshrine this artifact</button>
+        </div>
+      </section>
+
+      <!-- 7 FORGE -->
+      <section class="panel night" data-name="Forge the artifact">
+        <div class="pad" style="text-align:center">
+          <p class="eyebrow" style="text-align:center">Step six · The forging</p>
+          <div class="stage">
+            <div class="incant" id="incant">Opening the curiosity cabinet...</div>
+            <div class="scene" id="scene">
+              <div class="spot"></div>
+              <div class="gem"><span class="facet"></span><span class="facet b"></span><span class="facet c"></span></div>
+              <div class="plinth"></div>
+            </div>
+            <div id="forgecap" style="opacity:0;transition:1s">
+              <div style="font-family:var(--serif);font-style:italic;font-size:19px;color:var(--gold-bright)" id="forgeTitle">...</div>
+              <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--rose);margin-top:5px">enshrined in your museum</div>
+            </div>
+          </div>
+          <button class="btn" id="forgebtn" style="opacity:0;pointer-events:none;transition:1s" onclick="goMuseum()">Enter my museum</button>
+        </div>
+      </section>
+
+      <!-- 8 MUSEUM -->
+      <section class="panel night" data-name="Your museum">
+        <div class="pad">
+          <p class="eyebrow">The world</p>
+          <h2 class="ask">Five halls. <em>Yours.</em></h2>
+          <div class="halls" id="halls"></div>
+        </div>
+      </section>
+
+      <!-- 9 HALL -->
+      <section class="panel night" data-name="Inside the hall">
+        <div class="pad" style="padding-bottom:20px">
+          <div class="gallery" id="galleryView">
+            <div class="ghall" id="galleryTitle">Hall of Nostalgia<span>no artifacts yet</span></div>
+            <div class="gfloor"></div>
+          </div>
+          <p class="txt" style="color:#cdbfca;text-align:center;margin-top:14px;font-style:italic;font-family:var(--serif)">The museum grows every time you feel something.</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nb" id="prev" onclick="prev()">← Back</button>
+    <div class="name" id="screenname"></div>
+    <button class="nb" id="nextb" onclick="next()">Next →</button>
+  </div>
+
+  <p class="credit">MoodMuse · connected to live backend</p>
+</div>
+
+<script>
+// =====================================================================
+// CONFIG
+// =====================================================================
+// To use real Supabase auth, set both values below.
+// Leave empty to run in demo mode (no keys needed).
+const SUPABASE_URL  = '';
+const SUPABASE_ANON = '';
+const API_BASE      = '';  // same origin
+
+// =====================================================================
+// AUTH — auto-skips in demo mode
+// =====================================================================
+let sb = null;
+let session = null;
+const DEMO_MODE = !SUPABASE_URL || !SUPABASE_ANON;
+
+try {
+  if (!DEMO_MODE) {
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  }
+} catch(e) { console.warn('Supabase init skipped:', e); }
+
+// In demo mode, hide auth overlay immediately
+if (DEMO_MODE) {
+  session = { access_token: 'demo', user: { email: 'visitor' } };
+  document.getElementById('authOverlay').classList.add('hidden');
+  document.getElementById('userGreeting').textContent = 'Demo mode — no keys needed';
+}
+
+let authMode = 'login';
+
+function toggleAuthMode() {
+  authMode = authMode === 'login' ? 'signup' : 'login';
+  document.getElementById('authBtn').textContent = authMode === 'login' ? 'Sign in' : 'Create account';
+  document.getElementById('authToggle').textContent = authMode === 'login'
+    ? 'Need an account? Sign up'
+    : 'Already have an account? Sign in';
+  document.getElementById('authSubtext').textContent = authMode === 'login'
+    ? 'Sign in to begin your journey'
+    : 'Create an account to start collecting';
+  document.getElementById('authErr').textContent = '';
+}
+
+async function handleAuth() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const errEl = document.getElementById('authErr');
+  errEl.textContent = '';
+
+  if (!email || !password) { errEl.textContent = 'Email and password required'; return; }
+
+  if (!sb) {
+    session = { access_token: 'demo', user: { email } };
+    document.getElementById('authOverlay').classList.add('hidden');
+    document.getElementById('userGreeting').textContent = email;
+    return;
+  }
+
+  const btn = document.getElementById('authBtn');
+  btn.disabled = true;
+  btn.textContent = 'Opening the doors...';
+
+  try {
+    let result;
+    if (authMode === 'signup') {
+      result = await sb.auth.signUp({ email, password });
+    } else {
+      result = await sb.auth.signInWithPassword({ email, password });
+    }
+    if (result.error) throw result.error;
+    session = result.data.session;
+    document.getElementById('authOverlay').classList.add('hidden');
+    document.getElementById('userGreeting').textContent = email;
+  } catch (err) {
+    errEl.textContent = err.message || 'Authentication failed';
+    btn.disabled = false;
+    btn.textContent = authMode === 'login' ? 'Sign in' : 'Create account';
+  }
+}
+
+(async function checkSession() {
+  if (!sb) return;
+  const { data } = await sb.auth.getSession();
+  if (data?.session) {
+    session = data.session;
+    document.getElementById('authOverlay').classList.add('hidden');
+    document.getElementById('userGreeting').textContent = session.user.email;
+  }
+})();
+
+function authHeader() {
+  if (!session) return {};
+  return { 'Authorization': 'Bearer ' + session.access_token };
+}
+
+// =====================================================================
+// STATE
+// =====================================================================
+let selectedMood = 'nostalgic';
+let materialsBase64 = null;  // captured/uploaded image as data URI
+let currentProject = null;   // response from /api/projects/generate
+let captureBase64 = null;    // finished artifact photo
+let currentArtifact = null;  // response from /api/artifacts POST
+let museumData = null;       // response from /api/museum
+let selectedHallIndex = 0;
+
+const MOODS = [
+  ['Nostalgic','#A86A82'],['Inspired','#D6B56E'],['Curious','#9B7FB0'],['Overwhelmed','#6E8FA8'],
+  ['Healing','#7FA88C'],['Hopeful','#E8CD93'],['Ambitious','#C77B53'],['Lonely','#8A7CA8'],
+  ['Creative','#C98AA6'],['Reflective','#9A93A8']
+];
+const MOOD_ICONS = {nostalgic:'🌙',inspired:'✨',curious:'🎭',overwhelmed:'🌊',healing:'🌊',hopeful:'✨',ambitious:'🔥',lonely:'🌙',creative:'✨',reflective:'🌙'};
+const HALL_EMOJIS = {'Hall of Nostalgia':'🌙','Hall of Dreams':'✨','Hall of Healing':'🌊','Hall of Ambition':'🔥','Hall of Curiosity':'🎭'};
+
+const incantations = [
+  'Opening the curiosity cabinet...',
+  'Gathering forgotten stories...',
+  'Searching for hidden possibilities...',
+  'Pressing the artifact into starlight...',
+  'Writing the plaque in gold leaf...',
+];
+
+// =====================================================================
+// NAVIGATION
+// =====================================================================
+const panels = () => [...document.querySelectorAll('.panel')];
+let cur = 0;
+
+// Build rail pips
+const rail = document.getElementById('rail');
+panels().forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'pip';
+  d.onclick = () => go(i);
+  rail.appendChild(d);
+});
+
+function render() {
+  panels().forEach((p, i) => p.classList.toggle('on', i === cur));
+  [...rail.children].forEach((p, i) => {
+    p.className = 'pip' + (i < cur ? ' done' : '') + (i === cur ? ' active' : '');
+  });
+  document.getElementById('screenname').textContent = panels()[cur].dataset.name;
+  document.getElementById('prev').disabled = cur === 0;
+  document.getElementById('nextb').disabled = cur === panels().length - 1;
+}
+function go(i) { cur = Math.max(0, Math.min(panels().length - 1, i)); render(); }
+function next() { go(cur + 1); }
+function prev() { go(cur - 1); }
+document.addEventListener('keydown', e => { if (e.key === 'ArrowRight') next(); if (e.key === 'ArrowLeft') prev(); });
+
+// =====================================================================
+// MOOD PICKER (screen 2)
+// =====================================================================
+const mg = document.getElementById('moodgrid');
+MOODS.forEach(([name, color], i) => {
+  const b = document.createElement('button');
+  b.className = 'orb' + (i === 0 ? ' sel' : '');
+  b.innerHTML = `<span class="dot" style="background:${color};color:${color}"></span><span class="nm">${name}</span>`;
+  b.onclick = () => {
+    document.querySelectorAll('.orb').forEach(o => o.classList.remove('sel'));
+    b.classList.add('sel');
+    selectedMood = name.toLowerCase();
+  };
+  mg.appendChild(b);
+});
+
+// =====================================================================
+// MATERIALS (screen 3) — camera / upload
+// =====================================================================
+let matMode = 'camera';
+let cameraStream = null;
+
+function pickMatMode(mode) {
+  matMode = mode;
+  document.getElementById('matCamera').classList.toggle('sel', mode === 'camera');
+  document.getElementById('matUpload').classList.toggle('sel', mode === 'upload');
+  document.getElementById('viewfinder').classList.toggle('visible', mode === 'camera');
+  document.getElementById('uploadZone').classList.toggle('visible', mode === 'upload');
+
+  if (mode === 'camera') {
+    startCamera();
+  } else {
+    stopCamera();
+  }
+}
+
+async function startCamera() {
+  const video = document.getElementById('cameraFeed');
+  const placeholder = document.getElementById('vfPlaceholder');
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 } }
+    });
+    video.srcObject = cameraStream;
+    placeholder.style.display = 'none';
+  } catch (err) {
+    placeholder.textContent = 'Camera unavailable. Use upload instead.';
+    console.warn('Camera error:', err);
+  }
+}
+
+function stopCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+}
+
+function captureFromCamera() {
+  const video = document.getElementById('cameraFeed');
+  if (!video.srcObject) return null;
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  return canvas.toDataURL('image/jpeg', 0.85);
+}
+
+function handleMatFileSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    materialsBase64 = e.target.result;
+    // Show preview in upload zone
+    const uzIco = document.getElementById('uzIco');
+    const uzText = document.getElementById('uzText');
+    const uzHint = document.getElementById('uzHint');
+    uzIco.innerHTML = `<img src="${materialsBase64}" style="max-width:100%;max-height:100px;border-radius:10px">`;
+    uzText.textContent = file.name;
+    uzHint.textContent = 'Ready to scan';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function submitMaterials() {
+  const statusEl = document.getElementById('matStatus');
+  const btn = document.getElementById('matSubmitBtn');
+  const chipsEl = document.getElementById('chips');
+  chipsEl.innerHTML = '';
+
+  // Get image based on mode
+  if (matMode === 'camera') {
+    materialsBase64 = captureFromCamera();
+    if (!materialsBase64) {
+      // Fallback: open file picker with camera capture
+      document.getElementById('matCameraInput').click();
+      return;
+    }
+    stopCamera();
+  }
+
+  if (!materialsBase64) {
+    statusEl.textContent = 'Please select or capture an image first';
+    return;
+  }
+
+  btn.disabled = true;
+  statusEl.textContent = 'The curator is examining your materials...';
+
+  try {
+    const res = await fetch(API_BASE + '/api/projects/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
+      body: JSON.stringify({ mood: selectedMood, imageBase64: materialsBase64 }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Server error ${res.status}`);
+    }
+
+    currentProject = await res.json();
+    statusEl.textContent = '';
+
+    // Show detected materials as chips
+    (currentProject.detectedMaterials || []).forEach((m, i) => {
+      const s = document.createElement('span');
+      s.className = 'chip';
+      s.textContent = '✦ ' + m;
+      s.style.animationDelay = (i * 0.22) + 's';
+      chipsEl.appendChild(s);
+    });
+
+    // Populate project screen (4)
+    populateProject(currentProject);
+
+    // Populate identity screen (5)
+    populateIdentity(currentProject);
+
+    // Auto-advance after a beat
+    setTimeout(() => { btn.disabled = false; next(); }, 1200);
+
+  } catch (err) {
+    statusEl.textContent = err.message;
+    btn.disabled = false;
+  }
+}
+
+// =====================================================================
+// PROJECT SCREEN (4) — populate from API response
+// =====================================================================
+function populateProject(p) {
+  document.getElementById('projTitle').textContent = p.projectTitle || '...';
+  document.getElementById('projConcept').innerHTML = '<em>' + (p.concept || '') + '</em>';
+  document.getElementById('projWhyLabel').textContent = 'Why this, for ' + (p.mood || '');
+  document.getElementById('projWhy').textContent = p.emotionalExplanation || '';
+  document.getElementById('projMaterials').textContent = (p.detectedMaterials || []).join(' · ');
+
+  const stepsEl = document.getElementById('projSteps');
+  stepsEl.innerHTML = '';
+  (p.instructions || []).forEach(s => {
+    const li = document.createElement('li');
+    li.textContent = s.text || s;
+    stepsEl.appendChild(li);
+  });
+
+  const time = (p.estimatedTime || '').replace(/[^\d]/g, '') || '--';
+  document.getElementById('projTime').textContent = time;
+  document.getElementById('projDiff').textContent = p.difficulty || '--';
+  document.getElementById('projMoodIcon').textContent = MOOD_ICONS[p.mood] || '✦';
+  document.getElementById('projMoodLabel').textContent = p.mood || 'mood';
+}
+
+// =====================================================================
+// IDENTITY SCREEN (5) — populate from API response
+// =====================================================================
+function populateIdentity(p) {
+  document.getElementById('idTitle').textContent = p.museumTitle || '...';
+  document.getElementById('idArtifactName').textContent = p.projectTitle || '';
+  document.getElementById('idDescription').textContent = p.museumDescription || '';
+  document.getElementById('idMeaning').textContent = p.artifactMeaning || '';
+}
+
+// =====================================================================
+// CAPTURE SCREEN (6) — upload finished artifact photo
+// =====================================================================
+function handleCaptureSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    captureBase64 = e.target.result;
+    const ico = document.getElementById('captureIco');
+    ico.innerHTML = `<img src="${captureBase64}" style="max-width:100%;max-height:140px;border-radius:10px">`;
+    document.getElementById('captureLabel').textContent = file.name;
+    document.getElementById('captureHint').textContent = 'Ready to enshrine';
+    document.getElementById('enshrineBtn').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function enshrineArtifact() {
+  if (!captureBase64 || !currentProject) return;
+
+  const statusEl = document.getElementById('captureStatus');
+  const btn = document.getElementById('enshrineBtn');
+  btn.disabled = true;
+  statusEl.textContent = 'Preparing the pedestal...';
+
+  try {
+    const res = await fetch(API_BASE + '/api/artifacts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
+      body: JSON.stringify({
+        project_id: currentProject.projectId,
+        imageBase64: captureBase64,
+        generate_3d: false,  // set true if you have Tripo/Meshy keys
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Server error ${res.status}`);
+    }
+
+    currentArtifact = await res.json();
+    statusEl.textContent = '';
+    next(); // go to forge screen
+    runForgeAnimation();
+
+  } catch (err) {
+    statusEl.textContent = err.message;
+    btn.disabled = false;
+  }
+}
+
+// =====================================================================
+// FORGE SCREEN (7) — animation + reveal
+// =====================================================================
+function runForgeAnimation() {
+  const inc = document.getElementById('incant');
+  const scene = document.getElementById('scene');
+  const cap = document.getElementById('forgecap');
+  const btn = document.getElementById('forgebtn');
+  const title = document.getElementById('forgeTitle');
+
+  scene.classList.add('forming');
+  cap.style.opacity = 0;
+  btn.style.opacity = 0;
+  btn.style.pointerEvents = 'none';
+
+  title.textContent = currentArtifact?.artifactName || currentProject?.museumTitle || '...';
+
+  let i = 0;
+  inc.textContent = incantations[0];
+  clearInterval(window._fg);
+  window._fg = setInterval(() => {
+    i++;
+    if (i < incantations.length) {
+      inc.textContent = incantations[i];
+    } else {
+      clearInterval(window._fg);
+      scene.classList.remove('forming');
+      inc.textContent = 'It is enshrined.';
+      cap.style.opacity = 1;
+      btn.style.opacity = 1;
+      btn.style.pointerEvents = 'auto';
+    }
+  }, 1100);
+}
+
+// =====================================================================
+// MUSEUM SCREEN (8) — load from API
+// =====================================================================
+async function goMuseum() {
+  go(7); // museum panel index
+  await loadMuseum();
+}
+
+async function loadMuseum() {
+  const hallsEl = document.getElementById('halls');
+  hallsEl.innerHTML = '';
+
+  try {
+    const res = await fetch(API_BASE + '/api/museum', {
+      headers: authHeader(),
+    });
+
+    if (!res.ok) throw new Error('Failed to load museum');
+    museumData = await res.json();
+
+    (museumData.rooms || []).forEach((room, idx) => {
+      const count = room.artifacts?.length || 0;
+      const emoji = HALL_EMOJIS[room.name] || '✦';
+      const desc = count > 0
+        ? `${count} artifact${count > 1 ? 's' : ''}`
+        : 'empty · awaiting a feeling';
+
+      const d = document.createElement('div');
+      d.className = 'door';
+      d.innerHTML = `<span class="em">${emoji}</span><div class="info"><div class="hn">${room.name}</div><div class="hc">${desc}</div></div><span class="curtain"></span>`;
+      d.onclick = () => openHall(idx);
+      hallsEl.appendChild(d);
+    });
+  } catch (err) {
+    hallsEl.innerHTML = `<p style="color:#c9bcc7;text-align:center;font-style:italic">${err.message}</p>`;
+  }
+}
+
+// =====================================================================
+// HALL / GALLERY SCREEN (9) — show artifacts in selected hall
+// =====================================================================
+function openHall(idx) {
+  selectedHallIndex = idx;
+  const room = museumData.rooms[idx];
+  if (!room) return;
+
+  const gallery = document.getElementById('galleryView');
+  const titleEl = document.getElementById('galleryTitle');
+
+  // Clear old exhibits (keep ghall + gfloor)
+  gallery.querySelectorAll('.exhibit').forEach(el => el.remove());
+
+  const count = room.artifacts?.length || 0;
+  const emoji = HALL_EMOJIS[room.name] || '✦';
+  titleEl.innerHTML = `${room.name}<span>${emoji} ${count} artifact${count !== 1 ? 's' : ''}</span>`;
+
+  // Position up to 5 artifacts
+  const positions = ['12%', '30%', '50%', '70%', '88%'];
+  (room.artifacts || []).slice(0, 5).forEach((art, i) => {
+    const exhibit = document.createElement('div');
+    exhibit.className = 'exhibit';
+    const pos = positions[i] || '50%';
+    exhibit.style.left = pos;
+    if (i === Math.floor(count / 2)) {
+      exhibit.style.transform = 'translateX(-50%)';
+    }
+    const size = i === Math.floor(count / 2) ? 'width:38px;height:50px' : 'width:30px;height:40px';
+    exhibit.innerHTML = `
+      <div class="minigem" style="${size}"></div>
+      <div class="miniplinth"></div>
+      <div class="miniplaque">${art.artifactName || 'Unnamed'}</div>
+    `;
+    gallery.appendChild(exhibit);
+  });
+
+  if (count === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'exhibit';
+    empty.style.left = '50%';
+    empty.style.transform = 'translateX(-50%)';
+    empty.innerHTML = `<div class="miniplaque" style="font-size:11px;color:#c9bcc7">This hall awaits its first artifact</div>`;
+    gallery.appendChild(empty);
+  }
+
+  go(8); // gallery panel
+}
+
+// =====================================================================
+// INIT
+// =====================================================================
+render();
+</script>
+
+<script>
+// Ambient starfield (unchanged)
+const cv = document.getElementById('stars'), ctx = cv.getContext('2d');
+let W, H, stars = [];
+function size() {
+  W = cv.width = innerWidth; H = cv.height = innerHeight;
+  stars = Array.from({ length: Math.floor(W * H / 9000) }, () => ({
+    x: Math.random() * W, y: Math.random() * H,
+    r: Math.random() * 1.3 + .3, p: Math.random() * 6.28, s: Math.random() * .02 + .004
+  }));
+}
+size(); addEventListener('resize', size);
+const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
+function draw(t) {
+  ctx.clearRect(0, 0, W, H);
+  for (const s of stars) {
+    const a = reduce ? .6 : (Math.sin(t * s.s + s.p) * .5 + .5);
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.28);
+    ctx.fillStyle = `rgba(231,225,215,${.15 + a * .65})`; ctx.fill();
+  }
+  if (!reduce) requestAnimationFrame(draw);
+}
+if (reduce) draw(0); else requestAnimationFrame(draw);
+</script>
