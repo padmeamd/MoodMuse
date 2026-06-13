@@ -49,6 +49,8 @@ export async function POST(req: NextRequest) {
       museum_description: identity.museum_description,
       artifact_meaning: identity.artifact_meaning,
       source_image_url: sourceImageUrl ?? null,
+      stylized_image_url: null,
+      style_status: "pending" as const,
       glb_url: null,
       model_status: "pending" as const,
     };

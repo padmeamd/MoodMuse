@@ -41,6 +41,8 @@ export async function GET() {
           artifact_meaning: a.artifact_meaning,
           mood_key: a.mood_key,
           source_image_url: a.source_image_url,
+          stylized_image_url: a.stylized_image_url,
+          style_status: a.style_status,
           glb_url: a.glb_url,
           model_status: a.model_status,
           created_at: a.created_at,

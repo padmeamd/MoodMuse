@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     let result;
     if (IS_DEMO) {
       await new Promise((r) => setTimeout(r, 1500));
-      result = mockConjure(moodKey as Mood);
+      result = mockConjure();
     } else {
       const { conjureProject } = await import("@/lib/claude");
       result = await conjureProject(moodKey as Mood, materials);

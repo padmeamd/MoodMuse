@@ -112,6 +112,8 @@ export interface ArtifactRow {
   museum_description: string;
   artifact_meaning: string;
   source_image_url: string | null;
+  stylized_image_url: string | null;
+  style_status: "pending" | "complete" | "failed";
   glb_url: string | null;
   model_status: "pending" | "forging" | "ready" | "failed";
   created_at: string;

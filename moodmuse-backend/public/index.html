@@ -5,71 +5,48 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   :root{
-    --bg:#F8F4EE;
-    --plum:#4B324F;
-    --plum-deep:#2E1F31;
-    --rose:#A86A82;
-    --gold:#D6B56E;
-    --gold-bright:#E8CD93;
-    --moon:#E7E1D7;
-    --ink:#3A2A3D;
-    --serif:'Fraunces',Georgia,serif;
-    --sans:'Inter',-apple-system,system-ui,sans-serif;
+    --bg:#F8F4EE;--plum:#4B324F;--plum-deep:#2E1F31;--rose:#A86A82;
+    --gold:#D6B56E;--gold-bright:#E8CD93;--moon:#E7E1D7;--ink:#3A2A3D;
+    --serif:'Fraunces',Georgia,serif;--sans:'Inter',-apple-system,system-ui,sans-serif;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%}
-  body{
-    font-family:var(--sans);
-    color:var(--moon);
-    background:radial-gradient(120% 90% at 50% -10%, #5b3f60 0%, var(--plum) 38%, var(--plum-deep) 100%);
-    min-height:100%;
-    display:flex;flex-direction:column;align-items:center;
-    padding:28px 16px 40px;
-    overflow-x:hidden;
-  }
+  html,body{margin:0;width:100%;min-height:100%;overflow-x:hidden}
+  body{font-family:var(--sans);color:var(--moon);
+    background:radial-gradient(120% 90% at 50% -10%,#5b3f60 0%,var(--plum) 38%,var(--plum-deep) 100%);
+    min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:clamp(12px,3vw,40px) clamp(8px,2vw,16px)}
   #stars{position:fixed;inset:0;z-index:0;pointer-events:none}
-  .wrap{position:relative;z-index:1;width:100%;max-width:440px;display:flex;flex-direction:column;align-items:center;gap:18px}
+  .wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;align-items:center;gap:14px}
   .brand{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
   .brand .mark{font-family:var(--serif);font-weight:500;font-size:13px;letter-spacing:.42em;text-transform:uppercase;color:var(--gold)}
-  .brand h1{font-family:var(--serif);font-weight:400;font-style:italic;font-size:30px;margin:0;color:var(--moon);letter-spacing:.01em}
-  .brand .sub{font-size:12.5px;color:#cdbfca;letter-spacing:.02em}
+  .brand h1{font-family:var(--serif);font-weight:400;font-style:italic;font-size:30px;margin:0;color:var(--moon)}
+  .brand .sub{font-size:12.5px;color:#cdbfca}
   .rail{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:center;max-width:360px}
   .pip{width:9px;height:9px;border-radius:50%;background:rgba(231,225,215,.22);transition:.4s;cursor:pointer}
-  .pip.done{background:var(--rose)}
-  .pip.active{background:var(--gold);box-shadow:0 0 0 4px rgba(214,181,110,.22);transform:scale(1.15)}
-  .device{
-    width:100%;max-width:390px;aspect-ratio:9/19;
-    border-radius:42px;padding:11px;
+  .pip.done{background:var(--rose)}.pip.active{background:var(--gold);box-shadow:0 0 0 4px rgba(214,181,110,.22);transform:scale(1.15)}
+  .device{width:min(100%,430px);max-width:430px;height:min(90dvh,820px);max-height:90dvh;
+    border-radius:42px;padding:11px;overflow:hidden;display:flex;flex-direction:column;
     background:linear-gradient(160deg,#6a4a6f,#2c1d2f);
-    box-shadow:0 40px 80px -30px rgba(0,0,0,.7), inset 0 0 0 1px rgba(214,181,110,.28), 0 0 0 1px rgba(0,0,0,.3);
-    position:relative;
-  }
-  .screen{position:relative;width:100%;height:100%;border-radius:32px;overflow:hidden;background:var(--bg);color:var(--ink)}
+    box-shadow:0 40px 80px -30px rgba(0,0,0,.7),inset 0 0 0 1px rgba(214,181,110,.28);position:relative}
+  .screen{position:relative;width:100%;flex:1;min-height:0;border-radius:32px;overflow:hidden;background:var(--bg);color:var(--ink)}
   .panel{position:absolute;inset:0;display:none;flex-direction:column;opacity:0}
   .panel.on{display:flex;animation:rise .65s cubic-bezier(.2,.7,.2,1) forwards}
   @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-  .night{background:radial-gradient(130% 80% at 50% 0%, #5b3f60, var(--plum) 45%, var(--plum-deep));color:var(--moon)}
+  .night{background:radial-gradient(130% 80% at 50% 0%,#5b3f60,var(--plum) 45%,var(--plum-deep));color:var(--moon)}
   .pad{padding:30px 26px;display:flex;flex-direction:column;height:100%;overflow:auto;min-height:0}
   .eyebrow{font-family:var(--sans);font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);margin:0 0 12px}
   .ask{font-family:var(--serif);font-weight:400;font-size:25px;line-height:1.22;margin:0}
-  .ask em{font-style:italic;color:var(--rose)}
-  .night .ask em{color:var(--gold-bright)}
-  .btn{
-    font-family:var(--serif);font-size:16px;font-style:italic;letter-spacing:.02em;
-    color:var(--plum-deep);background:linear-gradient(165deg,var(--gold-bright),var(--gold));
-    border:none;border-radius:30px;padding:13px 22px;cursor:pointer;
-    box-shadow:0 10px 22px -10px rgba(214,181,110,.8);transition:transform .2s,filter .2s;
-  }
-  .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
-  .btn:active{transform:translateY(0)}
-  .btn.ghost{background:none;color:var(--moon);box-shadow:none;border:1px solid rgba(231,225,215,.35)}
+  .ask em{font-style:italic;color:var(--rose)}.night .ask em{color:var(--gold-bright)}
+  .btn{font-family:var(--serif);font-size:16px;font-style:italic;color:var(--plum-deep);
+    background:linear-gradient(165deg,var(--gold-bright),var(--gold));border:none;border-radius:30px;
+    padding:13px 22px;cursor:pointer;box-shadow:0 10px 22px -10px rgba(214,181,110,.8);transition:transform .2s,filter .2s}
+  .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}.btn:active{transform:translateY(0)}
   .btn:disabled{opacity:.5;cursor:default;transform:none;filter:none}
   .moon-disc{width:96px;height:96px;border-radius:50%;
-    background:radial-gradient(circle at 38% 34%, #fff8ea, var(--moon) 55%, #b9aeb8 100%);
-    box-shadow:0 0 60px 8px rgba(231,225,215,.35), inset -10px -8px 26px rgba(75,50,79,.4);
+    background:radial-gradient(circle at 38% 34%,#fff8ea,var(--moon) 55%,#b9aeb8 100%);
+    box-shadow:0 0 60px 8px rgba(231,225,215,.35),inset -10px -8px 26px rgba(75,50,79,.4);
     margin:0 auto;animation:float 7s ease-in-out infinite}
   @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
   .moodgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:18px;overflow:auto;padding-right:2px}
@@ -78,23 +55,17 @@
   .orb:hover{border-color:rgba(214,181,110,.5);background:rgba(214,181,110,.08)}
   .orb .dot{width:22px;height:22px;border-radius:50%;margin-bottom:9px;box-shadow:0 0 16px 1px currentColor;display:block}
   .orb .nm{font-family:var(--serif);font-size:16px;color:var(--moon)}
-  .orb.sel{border-color:var(--gold);background:rgba(214,181,110,.14);box-shadow:0 0 0 1px var(--gold) inset, 0 12px 26px -14px rgba(214,181,110,.7)}
+  .orb.sel{border-color:var(--gold);background:rgba(214,181,110,.14);box-shadow:0 0 0 1px var(--gold) inset,0 12px 26px -14px rgba(214,181,110,.7)}
   .orb.sel::after{content:'✦';position:absolute;top:8px;right:11px;color:var(--gold);font-size:12px}
-
   /* materials */
   .mat-options{display:flex;gap:10px;margin-top:14px;flex-shrink:0}
-  .mat-opt{flex:1;display:flex;flex-direction:row;align-items:center;gap:10px;
-    padding:12px 14px;border-radius:14px;border:1.5px solid rgba(231,225,215,.18);
-    background:rgba(255,255,255,.04);cursor:pointer;transition:.25s;text-align:left}
-  .mat-opt:hover{border-color:rgba(214,181,110,.5);background:rgba(214,181,110,.08)}
-  .mat-opt.sel{border-color:var(--gold);background:rgba(214,181,110,.14);box-shadow:0 0 0 1px var(--gold) inset, 0 12px 26px -14px rgba(214,181,110,.7)}
+  .mat-opt{flex:1;display:flex;flex-direction:row;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;
+    border:1.5px solid rgba(231,225,215,.18);background:rgba(255,255,255,.04);cursor:pointer;transition:.25s;text-align:left}
+  .mat-opt:hover{border-color:rgba(214,181,110,.5)}.mat-opt.sel{border-color:var(--gold);background:rgba(214,181,110,.14)}
   .mat-opt .mat-ico{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
-    background:radial-gradient(circle at 40% 36%,rgba(214,181,110,.22),rgba(168,106,130,.15));
-    border:1px solid rgba(214,181,110,.3)}
-  .mat-opt .mat-label{font-family:var(--serif);font-size:14px;color:var(--moon);line-height:1.25}
-  .mat-opt .mat-hint{font-size:10.5px;color:#c9bcc7;line-height:1.3;margin-top:2px}
-  .viewfinder{flex:1;margin:14px 0 0;border-radius:20px;position:relative;overflow:hidden;
-    background:linear-gradient(135deg,#3a2a3d,#2c1d2f);min-height:120px;display:none}
+    background:radial-gradient(circle at 40% 36%,rgba(214,181,110,.22),rgba(168,106,130,.15));border:1px solid rgba(214,181,110,.3)}
+  .mat-opt .mat-label{font-family:var(--serif);font-size:14px;color:var(--moon)}.mat-opt .mat-hint{font-size:10.5px;color:#c9bcc7;margin-top:2px}
+  .viewfinder{flex:1;margin:14px 0 0;border-radius:20px;position:relative;overflow:hidden;background:linear-gradient(135deg,#3a2a3d,#2c1d2f);min-height:120px;display:none}
   .viewfinder.visible{display:block}
   .viewfinder video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:20px}
   .viewfinder .vf-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:#c9bcc7;text-align:center;padding:20px}
@@ -104,37 +75,31 @@
   .c3{bottom:16px;left:16px;border-right:0;border-top:0;border-radius:0 0 0 8px}
   .c4{bottom:16px;right:16px;border-left:0;border-top:0;border-radius:0 0 8px 0}
   .scan{position:absolute;left:14px;right:14px;height:2px;border-radius:2px;z-index:2;
-    background:linear-gradient(90deg,transparent,var(--gold-bright),transparent);
-    box-shadow:0 0 14px 2px rgba(214,181,110,.6);animation:scan 2.4s ease-in-out infinite}
+    background:linear-gradient(90deg,transparent,var(--gold-bright),transparent);box-shadow:0 0 14px 2px rgba(214,181,110,.6);animation:scan 2.4s ease-in-out infinite}
   @keyframes scan{0%,100%{top:18px}50%{top:calc(100% - 20px)}}
   .upload-zone{flex:1;margin:14px 0 0;border-radius:20px;position:relative;overflow:hidden;display:none;
     border:2px dashed rgba(214,181,110,.45);background:rgba(214,181,110,.05);
     flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:22px;min-height:140px}
   .upload-zone.visible{display:flex}
-  .upload-zone .uz-ico{font-size:36px;opacity:.85}
-  .upload-zone .uz-text{font-family:var(--serif);font-style:italic;font-size:16px;color:var(--moon)}
-  .upload-zone .uz-hint{font-size:11.5px;color:#c9bcc7;max-width:200px;line-height:1.4}
-  .upload-zone img{max-width:100%;max-height:120px;border-radius:10px;object-fit:contain}
+  .upload-zone .uz-ico{font-size:36px}.upload-zone .uz-text{font-family:var(--serif);font-style:italic;font-size:16px;color:var(--moon)}
+  .upload-zone .uz-hint{font-size:11.5px;color:#c9bcc7;max-width:200px}
   .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
-  .chip{font-size:12px;letter-spacing:.02em;color:var(--plum-deep);background:linear-gradient(160deg,var(--gold-bright),var(--gold));
+  .chip{font-size:12px;color:var(--plum-deep);background:linear-gradient(160deg,var(--gold-bright),var(--gold));
     padding:6px 11px;border-radius:20px;opacity:0;transform:translateY(8px) scale(.96);animation:pop .5s forwards}
   @keyframes pop{to{opacity:1;transform:none}}
   .mat-submit{margin-top:12px;align-self:center;flex-shrink:0}
-
+  .status-bar{font-size:12px;color:var(--gold);letter-spacing:.02em;min-height:18px;text-align:center;font-family:var(--serif);font-style:italic}
   /* plaque */
-  .plaque{background:linear-gradient(180deg,#fffdf8,#f3ecdf);
-    border-radius:14px;padding:20px 19px;color:var(--ink);
-    border:1px solid rgba(214,181,110,.7);
-    box-shadow:0 0 0 4px rgba(255,255,255,.5) inset, 0 18px 40px -22px rgba(46,31,49,.55);
+  .plaque{background:linear-gradient(180deg,#fffdf8,#f3ecdf);border-radius:14px;padding:20px 19px;color:var(--ink);
+    border:1px solid rgba(214,181,110,.7);box-shadow:0 0 0 4px rgba(255,255,255,.5) inset,0 18px 40px -22px rgba(46,31,49,.55);
     position:relative;overflow:auto;flex:1;min-height:0}
   .plaque::before{content:'';position:absolute;inset:7px;border:1px solid rgba(214,181,110,.55);border-radius:9px;pointer-events:none}
   .seal{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--rose);text-align:center;margin-bottom:6px}
-  .ptitle{font-family:var(--serif);font-size:23px;line-height:1.16;font-weight:400;color:var(--plum);text-align:center;margin:0 0 4px}
+  .ptitle{font-family:var(--serif);font-size:22px;line-height:1.16;font-weight:400;color:var(--plum);text-align:center;margin:0 0 4px}
   .ptitle.it{font-style:italic}
   .rule{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:11px 0}
   .lbl{font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--rose);margin:12px 0 4px;font-weight:600}
-  .txt{font-size:13px;line-height:1.5;color:#4a3a4d;margin:0}
-  .txt.serif{font-family:var(--serif);font-style:italic;font-size:14.5px;color:var(--plum)}
+  .txt{font-size:13px;line-height:1.5;color:#4a3a4d;margin:0}.txt.serif{font-family:var(--serif);font-style:italic;font-size:14.5px;color:var(--plum)}
   ol.steps{margin:5px 0 0;padding-left:0;list-style:none;counter-reset:s}
   ol.steps li{counter-increment:s;font-size:12.5px;line-height:1.45;color:#4a3a4d;padding:6px 0 6px 30px;position:relative;border-top:1px solid rgba(214,181,110,.25)}
   ol.steps li:first-child{border-top:0}
@@ -144,110 +109,195 @@
   .badge{flex:1;text-align:center;border:1px solid rgba(214,181,110,.6);border-radius:10px;padding:8px 4px}
   .badge b{display:block;font-family:var(--serif);font-size:16px;color:var(--plum)}
   .badge span{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--rose)}
-
   /* capture */
   .dropframe{flex:1;margin:20px 0;border:2px dashed rgba(214,181,110,.6);border-radius:18px;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:22px;
-    background:rgba(214,181,110,.05)}
-  .dropframe .ico{font-size:38px}
-  .dropframe .hint{font-size:12.5px;color:#6a5a6c;max-width:200px;line-height:1.45}
-  .dropframe img{max-width:100%;max-height:140px;border-radius:10px;object-fit:contain}
-
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:22px;background:rgba(214,181,110,.05)}
+  .dropframe .ico{font-size:38px}.dropframe .hint{font-size:12.5px;color:#6a5a6c;max-width:200px}
   /* forge */
-  .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center}
+  .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center}
   .incant{font-family:var(--serif);font-style:italic;font-size:18px;color:var(--gold-bright);min-height:24px}
+  .forge-card{display:none;width:200px;border-radius:16px;box-shadow:0 0 40px rgba(214,181,110,.4),0 20px 40px -20px rgba(0,0,0,.5);border:2px solid rgba(214,181,110,.4)}
+  .forge-card.visible{display:block;animation:rise .8s ease forwards}
   .scene{position:relative;width:160px;height:200px;perspective:600px}
   .plinth{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:120px;height:30px;border-radius:50%/40%;
-    background:radial-gradient(circle at 50% 30%, #6a4a6f, #2c1d2f);box-shadow:0 14px 30px -10px rgba(0,0,0,.6)}
+    background:radial-gradient(circle at 50% 30%,#6a4a6f,#2c1d2f);box-shadow:0 14px 30px -10px rgba(0,0,0,.6)}
   .spot{position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:160px;height:200px;
-    background:radial-gradient(ellipse 60% 70% at 50% 30%, rgba(231,225,215,.28), transparent 70%);pointer-events:none}
-  .gem{position:absolute;top:34px;left:50%;width:74px;height:96px;margin-left:-37px;
-    transform-style:preserve-3d;animation:spin 9s linear infinite}
+    background:radial-gradient(ellipse 60% 70% at 50% 30%,rgba(231,225,215,.28),transparent 70%);pointer-events:none}
+  .gem{position:absolute;top:34px;left:50%;width:74px;height:96px;margin-left:-37px;transform-style:preserve-3d;animation:spin 9s linear infinite}
   @keyframes spin{to{transform:rotateY(360deg)}}
   .facet{position:absolute;inset:0;clip-path:polygon(50% 0,100% 35%,82% 100%,18% 100%,0 35%);
-    background:linear-gradient(160deg,var(--gold-bright),var(--rose) 60%,var(--plum));
-    box-shadow:0 0 30px rgba(214,181,110,.5)}
-  .facet.b{transform:rotateY(60deg);opacity:.85}
-  .facet.c{transform:rotateY(120deg);opacity:.7}
+    background:linear-gradient(160deg,var(--gold-bright),var(--rose) 60%,var(--plum));box-shadow:0 0 30px rgba(214,181,110,.5)}
+  .facet.b{transform:rotateY(60deg);opacity:.85}.facet.c{transform:rotateY(120deg);opacity:.7}
   .forming .gem{filter:blur(2px) brightness(1.3);opacity:.5}
-
-  /* halls */
-  .halls{display:flex;flex-direction:column;gap:11px;margin-top:16px;overflow:auto;flex:1;min-height:0;padding-right:2px}
-  .door{display:flex;align-items:center;gap:14px;border:1px solid rgba(231,225,215,.16);border-radius:16px;
-    padding:14px 16px;cursor:pointer;transition:.25s;position:relative;overflow:hidden;
-    background:linear-gradient(100deg,rgba(168,106,130,.12),rgba(255,255,255,.03))}
-  .door:hover{border-color:rgba(214,181,110,.55);transform:translateX(2px)}
-  .door .em{font-size:26px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))}
-  .door .info{flex:1}
-  .door .hn{font-family:var(--serif);font-size:18px;color:var(--moon)}
-  .door .hc{font-size:11px;color:#c9bcc7;letter-spacing:.04em}
-  .door .curtain{position:absolute;top:0;bottom:0;right:0;width:26px;
-    background:repeating-linear-gradient(90deg,rgba(168,106,130,.55),rgba(168,106,130,.55) 4px,rgba(75,50,79,.55) 4px,rgba(75,50,79,.55) 8px);
-    border-left:1px solid var(--gold);opacity:.55}
-
-  /* gallery */
-  .gallery{flex:1;margin-top:16px;border-radius:18px;position:relative;overflow:hidden;min-height:0;
-    background:radial-gradient(120% 80% at 50% 0,#5b3f60,#2c1d2f)}
-  .gfloor{position:absolute;left:0;right:0;bottom:0;height:42%;
-    background:linear-gradient(180deg,rgba(75,50,79,.2),rgba(46,31,49,.85));
-    border-top:1px solid rgba(214,181,110,.2)}
-  .exhibit{position:absolute;bottom:18%;display:flex;flex-direction:column;align-items:center;gap:6px}
-  .minigem{width:30px;height:40px;clip-path:polygon(50% 0,100% 35%,82% 100%,18% 100%,0 35%);
-    background:linear-gradient(160deg,var(--gold-bright),var(--rose));box-shadow:0 0 18px rgba(214,181,110,.5);animation:float 6s ease-in-out infinite}
-  .miniplinth{width:46px;height:12px;border-radius:50%/40%;background:radial-gradient(circle at 50% 30%,#6a4a6f,#2c1d2f)}
-  .miniplaque{font-family:var(--serif);font-style:italic;font-size:8.5px;color:var(--gold-bright);text-align:center;max-width:74px;line-height:1.2}
-  .ghall{position:absolute;top:14px;left:0;right:0;text-align:center;font-family:var(--serif);font-size:17px;color:var(--moon)}
-  .ghall span{display:block;font-family:var(--sans);font-size:9.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-top:3px}
-
+  /* ---- MUSEUM: celestial theater ---- */
+  .museum-bg{background:radial-gradient(ellipse 120% 100% at 50% 0%,#5c2a3a 0%,#3d1a2a 30%,#1a0e16 100%);overflow:hidden}
+  .museum-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .museum-particles .mp{position:absolute;width:2px;height:2px;border-radius:50%;background:var(--gold-bright);opacity:0;animation:sparkle 4s ease-in-out infinite}
+  @keyframes sparkle{0%,100%{opacity:0;transform:translateY(0)}50%{opacity:.7;transform:translateY(-20px)}}
+  /* curtains */
+  .curtain-wrap{position:absolute;top:0;left:0;right:0;height:60px;display:flex;justify-content:space-between;pointer-events:none;z-index:2}
+  .curtain-l,.curtain-r{width:40px;height:60px;position:relative}
+  .curtain-l::before,.curtain-r::before{content:'';position:absolute;top:0;width:100%;height:100%;
+    background:repeating-linear-gradient(180deg,#7a2e42 0px,#6b2639 4px,#5c2030 8px);border-bottom:2px solid var(--gold);opacity:.85}
+  .curtain-l::before{border-radius:0 0 20px 0;right:0}.curtain-r::before{border-radius:0 0 0 20px;left:0}
+  .curtain-l::after,.curtain-r::after{content:'';position:absolute;bottom:0;width:12px;height:12px;
+    background:var(--gold);border-radius:50%;box-shadow:0 0 8px rgba(214,181,110,.6)}
+  .curtain-l::after{right:4px}.curtain-r::after{left:4px}
+  .curtain-valance{position:absolute;top:0;left:30px;right:30px;height:18px;
+    background:linear-gradient(180deg,#7a2e42,#5c2030);border-bottom:1.5px solid var(--gold);
+    border-radius:0 0 50% 50%;z-index:3}
+  /* celestial decorations */
+  .cel-moon{position:absolute;top:22px;right:20px;font-size:22px;opacity:.6;filter:drop-shadow(0 0 8px rgba(231,225,215,.3));z-index:4}
+  .cel-stars{position:absolute;top:8px;left:16px;font-size:10px;color:var(--gold-bright);opacity:.5;letter-spacing:6px;z-index:4}
+  /* museum header */
+  .mus-header{position:relative;z-index:5;text-align:center;margin-top:50px;padding:0 16px}
+  .mus-title{font-family:var(--serif);font-weight:400;font-size:18px;color:var(--gold-bright);margin:0;
+    text-shadow:0 0 20px rgba(214,181,110,.3)}
+  .mus-sub{font-family:var(--serif);font-style:italic;font-size:10px;color:#c9a0b0;margin:4px 0 0;letter-spacing:.02em}
+  .mus-rule{height:1px;margin:8px auto;width:60%;background:linear-gradient(90deg,transparent,var(--gold) 30%,var(--gold) 70%,transparent);opacity:.4}
+  /* shelf area */
+  .mus-shelves{position:relative;z-index:5;flex:1;overflow-y:auto;min-height:0;padding:6px 12px 12px;
+    display:flex;flex-direction:column}
+  .mus-shelf{display:flex;align-items:flex-end;justify-content:center;gap:10px;padding:8px 4px 0;flex-wrap:wrap;min-height:120px}
+  .mus-shelf-bar{height:5px;border-radius:2px;margin:0 4px;
+    background:linear-gradient(90deg,#2a1520,#8b5e3c 15%,#c49a6c 30%,#D6B56E 50%,#c49a6c 70%,#8b5e3c 85%,#2a1520);
+    box-shadow:0 3px 10px rgba(139,94,60,.5),0 1px 0 rgba(214,181,110,.3) inset;position:relative}
+  .mus-shelf-bar::before{content:'';position:absolute;top:-1px;left:8px;right:8px;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(214,181,110,.5),transparent)}
+  .mus-spotlight{position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:100px;height:80px;
+    background:radial-gradient(ellipse at 50% 100%,rgba(214,181,110,.12),transparent 70%);pointer-events:none}
+  .shelf-empty{font-family:var(--serif);font-style:italic;font-size:12px;color:#9a7080;text-align:center;padding:40px 20px;
+    flex:1;display:flex;align-items:center;justify-content:center}
+  /* tarot-style artifact cards */
+  .tarot{width:80px;cursor:pointer;transition:.3s;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative}
+  .tarot:hover{transform:translateY(-6px) scale(1.04)}
+  .tarot:hover .tarot-frame{border-color:var(--gold);box-shadow:0 0 20px rgba(214,181,110,.5),0 8px 24px rgba(0,0,0,.5)}
+  .tarot-frame{width:72px;height:96px;border-radius:8px;overflow:hidden;position:relative;
+    border:1.5px solid rgba(214,181,110,.4);background:#1a0e16;
+    box-shadow:0 4px 16px rgba(0,0,0,.5);transition:.3s}
+  .tarot-frame img{width:100%;height:100%;object-fit:cover}
+  .tarot-frame::after{content:'';position:absolute;inset:3px;border:1px solid rgba(214,181,110,.2);border-radius:5px;pointer-events:none}
+  .tarot-glyph{position:absolute;top:3px;right:5px;font-size:10px;filter:drop-shadow(0 0 4px rgba(0,0,0,.6))}
+  .tarot-name{font-family:var(--serif);font-style:italic;font-size:8px;color:var(--gold-bright);text-align:center;max-width:78px;line-height:1.2}
+  .tarot-room{font-size:6.5px;color:var(--rose);letter-spacing:.12em;text-transform:uppercase}
+  /* modal — storybook */
+  .modal-bg{position:absolute;inset:0;z-index:20;display:none;flex-direction:column;align-items:center;overflow:auto;
+    background:radial-gradient(ellipse at 50% 30%,#3d1a2a,#1a0e16 70%)}
+  .modal-bg.open{display:flex;animation:modalIn .5s ease}
+  @keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:none}}
+  .modal-close{position:sticky;top:0;align-self:flex-end;font-size:18px;color:var(--moon);cursor:pointer;background:rgba(26,14,22,.6);
+    border:1px solid rgba(214,181,110,.3);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;z-index:2}
+  .modal-inner{width:100%;max-width:280px;padding:10px 0 24px;display:flex;flex-direction:column;align-items:center;gap:14px}
+  .modal-frame{width:100%;border-radius:14px;overflow:hidden;position:relative;
+    border:2px solid var(--gold);box-shadow:0 0 30px rgba(214,181,110,.25),0 12px 40px rgba(0,0,0,.6)}
+  .modal-frame img{width:100%;display:block}
+  .modal-frame::before{content:'';position:absolute;inset:4px;border:1px solid rgba(214,181,110,.25);border-radius:10px;pointer-events:none;z-index:1}
+  .modal-plaque{width:100%;background:linear-gradient(180deg,rgba(60,26,42,.9),rgba(26,14,22,.95));
+    border:1px solid rgba(214,181,110,.4);border-radius:12px;padding:16px 14px;text-align:center;position:relative}
+  .modal-plaque::before{content:'';position:absolute;inset:5px;border:1px solid rgba(214,181,110,.15);border-radius:8px;pointer-events:none}
+  .modal-plaque h3{font-family:var(--serif);font-style:italic;font-size:18px;color:var(--gold-bright);margin:0 0 4px;
+    text-shadow:0 0 12px rgba(214,181,110,.3)}
+  .modal-plaque .mp-mood{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--rose);margin-bottom:10px}
+  .modal-plaque .mp-rule{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:8px 0;opacity:.5}
+  .modal-plaque .mp-desc{font-family:var(--serif);font-style:italic;font-size:11.5px;color:#d4b8c4;line-height:1.5;margin:0 0 8px}
+  .modal-plaque .mp-meaning{font-size:10.5px;color:#9a7a8a;line-height:1.45;margin:0 0 10px}
+  .modal-plaque .mp-room{font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.7}
+  .modal-orig{width:100%;max-width:220px;text-align:center}
+  .modal-orig-label{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:#9a7a8a;margin-bottom:6px}
+  .modal-orig img{width:100%;border-radius:10px;border:1px solid rgba(214,181,110,.25);box-shadow:0 4px 16px rgba(0,0,0,.4)}
+  .modal-stars{position:absolute;top:10px;left:0;right:0;text-align:center;font-size:9px;color:var(--gold-bright);opacity:.4;letter-spacing:8px;pointer-events:none}
   /* nav */
-  .nav{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:390px;gap:10px}
+  .nav{display:flex;align-items:center;justify-content:space-between;width:min(100%,430px);max-width:430px;gap:10px}
   .nav .name{font-family:var(--serif);font-style:italic;font-size:14px;color:var(--moon);flex:1;text-align:center}
   .nb{font-family:var(--sans);font-size:13px;color:var(--moon);background:rgba(255,255,255,.06);
     border:1px solid rgba(231,225,215,.22);border-radius:22px;padding:9px 16px;cursor:pointer;transition:.2s}
-  .nb:hover{border-color:var(--gold);color:var(--gold-bright)}
-  .nb[disabled]{opacity:.3;cursor:default}
-  :focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px}
-  .credit{font-size:10.5px;color:#9d8fa0;letter-spacing:.04em;text-align:center;max-width:360px}
-
-  /* auth overlay */
-  .auth-overlay{position:fixed;inset:0;z-index:100;background:rgba(46,31,49,.92);
-    display:flex;align-items:center;justify-content:center}
-  .auth-overlay.hidden{display:none}
-  .auth-box{background:linear-gradient(180deg,#fffdf8,#f3ecdf);border-radius:20px;padding:36px 30px;
-    width:90%;max-width:360px;text-align:center;color:var(--ink);
-    box-shadow:0 30px 60px -20px rgba(0,0,0,.5);border:1px solid rgba(214,181,110,.5)}
-  .auth-box h2{font-family:var(--serif);font-weight:400;font-size:24px;margin:0 0 6px;color:var(--plum)}
-  .auth-box p{font-size:13px;color:#6a5a6c;margin:0 0 20px}
-  .auth-box input{width:100%;padding:12px 14px;border:1px solid rgba(214,181,110,.5);border-radius:10px;
-    font-family:var(--sans);font-size:14px;margin-bottom:10px;background:#fff;color:var(--ink)}
-  .auth-box .btn{width:100%;margin-top:6px}
-  .auth-box .toggle{font-size:12px;color:var(--rose);cursor:pointer;margin-top:14px;display:inline-block}
-  .auth-box .auth-err{color:#c0392b;font-size:12px;margin-top:8px;min-height:18px}
-
-  /* status bar */
-  .status-bar{font-size:11px;color:var(--gold);letter-spacing:.02em;min-height:16px;text-align:center}
-
-  @media (max-width:430px){ .brand h1{font-size:26px} .pad{padding:26px 20px}
+  .nb:hover{border-color:var(--gold);color:var(--gold-bright)}.nb[disabled]{opacity:.3;cursor:default}
+  .credit{font-size:10.5px;color:#9d8fa0;text-align:center;max-width:360px}
+  /* ---- MOBILE: full-screen app, no bezel ---- */
+  @media(max-width:480px){
+    body{padding:0;justify-content:stretch}
+    .wrap{max-width:100%;gap:0;min-height:100dvh;justify-content:stretch}
+    .brand{display:none}
+    .rail{display:none}
+    .credit{display:none}
+    .device{width:100%;max-width:100%;height:100dvh;max-height:none;
+      border-radius:0;padding:0;background:none;box-shadow:none;flex:1}
+    .screen{border-radius:0;flex:1}
+    .panel{border-radius:0}
+    .pad{padding:24px 20px;padding-bottom:calc(20px + env(safe-area-inset-bottom));border-radius:0}
+    .nav{max-width:100%;width:100%;padding:8px 16px calc(8px + env(safe-area-inset-bottom));
+      background:rgba(46,31,49,.9);border-top:1px solid rgba(214,181,110,.15);
+      position:fixed;bottom:0;left:0;right:0;z-index:10;
+      -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+    .nav .name{font-size:12px}
+    .nb{padding:8px 14px;font-size:12px}
+    /* mood */
+    .moodgrid{gap:8px;margin-top:14px}
+    .orb{padding:12px 10px}
+    .orb .dot{width:18px;height:18px;margin-bottom:6px}
+    .orb .nm{font-size:14px}
+    /* materials */
     .mat-opt .mat-hint{display:none}
-    .mat-opt{padding:14px 10px;gap:8px}
-    .mat-opt .mat-ico{width:44px;height:44px;font-size:20px}
-    .mat-opt .mat-label{font-size:13.5px}
+    .mat-opt{padding:10px 12px;gap:8px}
+    .mat-opt .mat-ico{width:36px;height:36px;font-size:16px}
+    .mat-opt .mat-label{font-size:13px}
+    .mat-submit{font-size:14px;padding:11px 18px}
+    /* plaque */
+    .plaque{padding:16px 14px}
+    .ptitle{font-size:19px}
+    .seal{font-size:10px}
+    ol.steps li{font-size:11.5px;padding:5px 0 5px 26px}
+    ol.steps li::before{width:18px;height:18px;font-size:10px}
+    .meta{gap:6px}.badge{padding:6px 3px}.badge b{font-size:14px}
+    /* forge */
+    .forge-card{width:180px}
+    .incant{font-size:16px}
+    /* museum */
+    .mus-header{margin-top:44px}
+    .mus-title{font-size:16px}
+    .mus-sub{font-size:9px}
+    .mus-shelves{padding:4px 8px 60px}
+    .mus-shelf{gap:8px;min-height:110px}
+    .tarot{width:72px}
+    .tarot-frame{width:64px;height:86px;border-radius:7px}
+    .tarot-name{font-size:7.5px}
+    .tarot-room{font-size:6px}
+    .curtain-wrap{height:48px}
+    .curtain-l,.curtain-r{width:32px;height:48px}
+    .curtain-valance{height:14px;left:24px;right:24px}
+    .cel-moon{font-size:18px;top:18px;right:14px}
+    .cel-stars{font-size:8px;top:6px;left:10px}
+    /* modal */
+    .modal-bg{padding:14px}
+    .modal-inner{max-width:100%;padding:6px 0 20px}
+    .modal-plaque{padding:14px 12px}
+    .modal-plaque h3{font-size:16px}
+    .modal-plaque .mp-desc{font-size:10.5px}
+    .modal-plaque .mp-meaning{font-size:10px}
+    .modal-orig{max-width:200px}
+    /* general */
+    .moon-disc{width:72px;height:72px}
+    .ask{font-size:22px}
+    .btn{font-size:15px;padding:12px 20px}
+    .dropframe{padding:18px;margin:14px 0}
   }
-  @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important}}
+  /* small phones */
+  @media(max-width:380px){
+    .pad{padding:20px 16px}
+    .ask{font-size:20px}
+    .ptitle{font-size:17px}
+    .tarot{width:64px}
+    .tarot-frame{width:56px;height:76px}
+    .mus-shelf{gap:6px;min-height:95px}
+    .modal-plaque h3{font-size:14px}
+  }
+  /* desktop: constrained elegant preview */
+  @media(min-width:768px){
+    .device{width:430px;height:min(88dvh,820px)}
+    .wrap{gap:16px}
+  }
+  @media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important}}
 </style>
-
-<!-- Auth overlay -->
-<div class="auth-overlay" id="authOverlay">
-  <div class="auth-box">
-    <h2>Enter the Museum</h2>
-    <p id="authSubtext">Sign in to begin your journey</p>
-    <input type="email" id="authEmail" placeholder="Email">
-    <input type="password" id="authPassword" placeholder="Password">
-    <button class="btn" id="authBtn" onclick="handleAuth()">Sign in</button>
-    <div class="toggle" id="authToggle" onclick="toggleAuthMode()">Need an account? Sign up</div>
-    <div class="auth-err" id="authErr"></div>
-  </div>
-</div>
 
 <canvas id="stars"></canvas>
 
@@ -255,292 +305,224 @@
   <div class="brand">
     <div class="mark">A Museum of Feelings</div>
     <h1>MoodMuse</h1>
-    <div class="sub" id="userGreeting">Sign in to begin</div>
+    <div class="sub">Turn a feeling into something you can hold</div>
   </div>
-
   <div class="rail" id="rail"></div>
+  <div class="device"><div class="screen">
 
-  <div class="device">
-    <div class="screen">
-
-      <!-- 1 THRESHOLD -->
-      <section class="panel night" data-name="Threshold">
-        <div class="pad" style="justify-content:center;text-align:center;gap:22px">
-          <div class="moon-disc"></div>
-          <div>
-            <p class="eyebrow" style="text-align:center">You are about to enter</p>
-            <h2 class="ask" style="font-size:30px">A museum that <em>remembers</em> how you felt.</h2>
-          </div>
-          <p class="txt" style="color:#cdbfca;max-width:240px;margin:0 auto">Every feeling you transform here leaves something behind you can walk through later.</p>
-          <button class="btn" onclick="next()">Enter the museum</button>
+    <!-- 1 THRESHOLD -->
+    <section class="panel night" data-name="Threshold">
+      <div class="pad" style="justify-content:center;text-align:center;gap:22px">
+        <div class="moon-disc"></div>
+        <div>
+          <p class="eyebrow" style="text-align:center">You are about to enter</p>
+          <h2 class="ask" style="font-size:30px">A museum that <em>remembers</em> how you felt.</h2>
         </div>
-      </section>
+        <p class="txt" style="color:#cdbfca;max-width:240px;margin:0 auto">Every feeling you transform here leaves something behind you can walk through later.</p>
+        <button class="btn" onclick="next()">Enter the museum</button>
+      </div>
+    </section>
 
-      <!-- 2 MOOD -->
-      <section class="panel night" data-name="Choose a feeling">
-        <div class="pad">
-          <p class="eyebrow">Step one · The threshold</p>
-          <h2 class="ask">What feeling would you like to <em>transform</em> today?</h2>
-          <div class="moodgrid" id="moodgrid"></div>
+    <!-- 2 MOOD -->
+    <section class="panel night" data-name="Choose a feeling">
+      <div class="pad">
+        <p class="eyebrow">Step one</p>
+        <h2 class="ask">What feeling would you like to <em>transform</em> today?</h2>
+        <div class="moodgrid" id="moodgrid"></div>
+      </div>
+    </section>
+
+    <!-- 3 MATERIALS -->
+    <section class="panel night" data-name="Gather materials">
+      <div class="pad">
+        <p class="eyebrow">Step two</p>
+        <h2 class="ask">Show me what is <em>within reach</em>.</h2>
+        <div class="mat-options">
+          <button class="mat-opt sel" onclick="pickMatMode('camera')" id="matCamera">
+            <div class="mat-ico">📷</div><div><div class="mat-label">Take a photo</div><div class="mat-hint">Open camera</div></div>
+          </button>
+          <button class="mat-opt" onclick="pickMatMode('upload')" id="matUpload">
+            <div class="mat-ico">🖼️</div><div><div class="mat-label">Upload</div><div class="mat-hint">Choose an image</div></div>
+          </button>
         </div>
-      </section>
-
-      <!-- 3 MATERIALS -->
-      <section class="panel night" data-name="Gather materials">
-        <div class="pad">
-          <p class="eyebrow">Step two · The cabinet</p>
-          <h2 class="ask">Show me what is <em>within reach</em>.</h2>
-          <div class="mat-options">
-            <button class="mat-opt sel" onclick="pickMatMode('camera')" id="matCamera">
-              <div class="mat-ico">📷</div>
-              <div><div class="mat-label">Take a photo</div>
-              <div class="mat-hint">Open your camera and capture what's nearby</div></div>
-            </button>
-            <button class="mat-opt" onclick="pickMatMode('upload')" id="matUpload">
-              <div class="mat-ico">🖼️</div>
-              <div><div class="mat-label">Upload a photo</div>
-              <div class="mat-hint">Choose an image from your device</div></div>
-            </button>
-          </div>
-          <div class="viewfinder visible" id="viewfinder">
-            <video id="cameraFeed" autoplay playsinline muted></video>
-            <div class="vf-placeholder" id="vfPlaceholder">Tap below to open camera</div>
-            <span class="corner c1"></span><span class="corner c2"></span>
-            <span class="corner c3"></span><span class="corner c4"></span>
-            <div class="scan"></div>
-          </div>
-          <div class="upload-zone" id="uploadZone">
-            <div class="uz-ico" id="uzIco">📂</div>
-            <div class="uz-text" id="uzText">Drop your image here</div>
-            <div class="uz-hint" id="uzHint">or tap below to browse your files</div>
-            <button class="btn" style="font-size:14px;padding:10px 20px" onclick="document.getElementById('matFileInput').click()">Choose file</button>
-          </div>
-          <input type="file" id="matFileInput" accept="image/*" style="display:none" onchange="handleMatFileSelect(this)">
-          <input type="file" id="matCameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleMatFileSelect(this)">
-          <div class="chips" id="chips"></div>
-          <div class="status-bar" id="matStatus"></div>
-          <button class="btn mat-submit" id="matSubmitBtn" onclick="submitMaterials()">Scan my materials</button>
+        <div class="viewfinder visible" id="viewfinder">
+          <video id="cameraFeed" autoplay playsinline muted></video>
+          <div class="vf-placeholder" id="vfPlaceholder">Tap below to open camera</div>
+          <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+          <div class="scan"></div>
         </div>
-      </section>
+        <div class="upload-zone" id="uploadZone">
+          <div class="uz-ico" id="uzIco">📂</div>
+          <div class="uz-text" id="uzText">Drop your image here</div>
+          <div class="uz-hint" id="uzHint">or tap to browse</div>
+          <button class="btn" style="font-size:14px;padding:10px 20px" onclick="document.getElementById('matFileInput').click()">Choose file</button>
+        </div>
+        <input type="file" id="matFileInput" accept="image/*" style="display:none" onchange="handleMatFileSelect(this)">
+        <input type="file" id="matCameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleMatFileSelect(this)">
+        <div class="chips" id="chips"></div>
+        <div class="status-bar" id="matStatus"></div>
+        <button class="btn mat-submit" id="matSubmitBtn" onclick="submitMaterials()">Scan my materials</button>
+      </div>
+    </section>
 
-      <!-- 4 PROJECT (populated dynamically) -->
-      <section class="panel" data-name="The project">
-        <div class="pad">
-          <div class="plaque" id="projectPlaque">
-            <div class="seal">✦ The Alchemist's Plan ✦</div>
-            <h3 class="ptitle" id="projTitle">...</h3>
-            <div class="rule"></div>
-            <p class="txt" id="projConcept"><em>Waiting for your materials...</em></p>
-            <div class="lbl" id="projWhyLabel">Why this project</div>
-            <p class="txt" id="projWhy"></p>
-            <div class="lbl">From your cabinet</div>
-            <p class="txt" id="projMaterials"></p>
-            <div class="lbl">The making</div>
-            <ol class="steps" id="projSteps"></ol>
-            <div class="meta" id="projMeta">
-              <div class="badge"><b id="projTime">--</b><span>minutes</span></div>
-              <div class="badge"><b id="projDiff">--</b><span>difficulty</span></div>
-              <div class="badge"><b id="projMoodIcon">--</b><span id="projMoodLabel">mood</span></div>
+    <!-- 4 PROJECT -->
+    <section class="panel" data-name="The project">
+      <div class="pad">
+        <div class="plaque">
+          <div class="seal">✦ The Alchemist's Plan ✦</div>
+          <h3 class="ptitle" id="projTitle">...</h3>
+          <div class="rule"></div>
+          <p class="txt" id="projConcept"><em>Waiting for your materials...</em></p>
+          <div class="lbl" id="projWhyLabel">Why this project</div>
+          <p class="txt" id="projWhy"></p>
+          <div class="lbl">From your cabinet</div>
+          <p class="txt" id="projMaterials"></p>
+          <div class="lbl">The making</div>
+          <ol class="steps" id="projSteps"></ol>
+          <div class="meta">
+            <div class="badge"><b id="projTime">--</b><span>minutes</span></div>
+            <div class="badge"><b id="projDiff">--</b><span>difficulty</span></div>
+            <div class="badge"><b id="projMoodIcon">--</b><span id="projMoodLabel">mood</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 IDENTITY -->
+    <section class="panel night" data-name="Its name &amp; plaque">
+      <div class="pad">
+        <p class="eyebrow">Before it exists</p>
+        <h2 class="ask" style="margin-bottom:14px">It already has a <em>name</em>.</h2>
+        <div class="plaque" style="flex:0 1 auto">
+          <div class="seal">✦ Permanent Collection ✦</div>
+          <h3 class="ptitle it" id="idTitle">...</h3>
+          <div class="rule"></div>
+          <div class="lbl">Artifact</div><p class="txt" id="idArtifactName"></p>
+          <div class="lbl">From the curator</div><p class="txt serif" id="idDescription"></p>
+          <div class="lbl">What it keeps</div><p class="txt" id="idMeaning"></p>
+        </div>
+        <button class="btn" style="margin-top:16px;align-self:center" onclick="next()">I'll go make it</button>
+      </div>
+    </section>
+
+    <!-- 6 CAPTURE -->
+    <section class="panel" data-name="Upload creation">
+      <div class="pad">
+        <p class="eyebrow" style="color:var(--rose)">The unveiling</p>
+        <h2 class="ask" style="color:var(--plum)">You made it. Now <span style="color:var(--rose);font-style:italic">place it</span> on the pedestal.</h2>
+        <div class="dropframe" id="captureDropframe">
+          <div class="ico" id="captureIco">🖼️</div>
+          <div style="font-family:var(--serif);font-style:italic;font-size:18px;color:var(--plum)" id="captureLabel">Photograph your finished artifact</div>
+          <div class="hint" id="captureHint">Hold it to the light, one clear angle.</div>
+          <button class="btn" onclick="document.getElementById('captureFileInput').click()">Upload the photograph</button>
+        </div>
+        <input type="file" id="captureFileInput" accept="image/*" style="display:none" onchange="handleCaptureSelect(this)">
+        <div class="status-bar" id="captureStatus"></div>
+        <button class="btn" id="enshrineBtn" style="display:none;align-self:center;margin-top:10px" onclick="enshrineArtifact()">Enshrine this artifact</button>
+      </div>
+    </section>
+
+    <!-- 7 FORGE -->
+    <section class="panel night" data-name="Forging">
+      <div class="pad" style="text-align:center">
+        <p class="eyebrow" style="text-align:center">The forging</p>
+        <div class="stage">
+          <div class="incant" id="incant">Reading your creation...</div>
+          <!-- uploaded photo (shrinks/fades during forge) -->
+          <div id="forgeOrigWrap" style="position:relative;display:none">
+            <img id="forgeOrigImg" src="" style="width:160px;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.5);border:2px solid rgba(214,181,110,.3);transition:all 1.5s ease">
+            <div id="forgeOrigOverlay" style="position:absolute;inset:0;border-radius:14px;background:radial-gradient(circle,rgba(214,181,110,.0) 0%,rgba(214,181,110,.0) 100%);transition:all 1.5s ease;pointer-events:none"></div>
+          </div>
+          <!-- gem spinner (during processing) -->
+          <div class="scene" id="scene" style="display:none">
+            <div class="spot"></div>
+            <div class="gem"><span class="facet"></span><span class="facet b"></span><span class="facet c"></span></div>
+            <div class="plinth"></div>
+          </div>
+          <!-- final artifact reveal -->
+          <img id="forgeCard" src="" style="display:none;width:220px;border-radius:16px;box-shadow:0 0 50px rgba(214,181,110,.5),0 20px 50px -20px rgba(0,0,0,.6);border:2px solid rgba(214,181,110,.5);opacity:0;transition:all 1s ease">
+          <div id="forgecap" style="opacity:0;transition:1s">
+            <div style="font-family:var(--serif);font-style:italic;font-size:19px;color:var(--gold-bright)" id="forgeTitle">...</div>
+            <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--rose);margin-top:5px">enshrined in your museum</div>
+          </div>
+        </div>
+        <button class="btn" id="forgebtn" style="opacity:0;pointer-events:none;transition:1s" onclick="goMuseum()">Enter my museum</button>
+      </div>
+    </section>
+
+    <!-- 8 MUSEUM — celestial theater -->
+    <section class="panel museum-bg" data-name="Your museum">
+      <!-- particles -->
+      <div class="museum-particles" id="museumParticles"></div>
+      <!-- curtains -->
+      <div class="curtain-wrap"><div class="curtain-l"></div><div class="curtain-r"></div></div>
+      <div class="curtain-valance"></div>
+      <!-- celestial -->
+      <div class="cel-moon">🌙</div>
+      <div class="cel-stars">✦ ✦ ✦ ✦</div>
+      <!-- header -->
+      <div class="mus-header">
+        <div class="mus-title">Museum of Feelings</div>
+        <div class="mus-sub">Artifacts forged from memories, moods, and moments.</div>
+        <div class="mus-rule"></div>
+      </div>
+      <!-- shelves -->
+      <div class="mus-shelves" id="musShelves">
+        <div class="shelf-empty" id="shelfEmpty">Your museum awaits its first artifact.</div>
+      </div>
+      <!-- detail modal -->
+      <div class="modal-bg" id="modalBg">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <div class="modal-stars">✦ ☽ ✦ ★ ✦ ☽ ✦</div>
+        <div class="modal-inner">
+          <div class="modal-frame"><img id="modalCardImg" src=""></div>
+          <div class="modal-plaque">
+            <div style="display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:6px">
+              <input id="modalNameInput" type="text" value="" style="font-family:var(--serif);font-style:italic;font-size:17px;color:var(--gold-bright);
+                background:none;border:none;border-bottom:1px solid rgba(214,181,110,.3);text-align:center;width:100%;padding:4px 2px;outline:none"
+                onfocus="this.style.borderBottomColor='var(--gold)'" onblur="this.style.borderBottomColor='rgba(214,181,110,.3)'">
             </div>
+            <button id="modalSaveBtn" onclick="saveArtifactName()" style="font-family:var(--sans);font-size:9px;letter-spacing:.15em;text-transform:uppercase;
+              color:var(--gold);background:rgba(214,181,110,.1);border:1px solid rgba(214,181,110,.3);border-radius:14px;padding:4px 14px;cursor:pointer;
+              margin:0 auto 8px;display:block;transition:.2s">Save</button>
+            <div class="mp-mood" id="modalMood"></div>
+            <div class="mp-rule"></div>
+            <p class="mp-desc" id="modalDesc"></p>
+            <p class="mp-meaning" id="modalMeaning"></p>
+            <div class="mp-rule"></div>
+            <p class="mp-room" id="modalRoom"></p>
+          </div>
+          <div class="modal-orig">
+            <div class="modal-orig-label">Original creation</div>
+            <img id="modalOrigImg" src="">
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- 5 IDENTITY (populated dynamically) -->
-      <section class="panel night" data-name="Its name & plaque">
-        <div class="pad">
-          <p class="eyebrow">Step four · Before it exists</p>
-          <h2 class="ask" style="margin-bottom:14px">It already has a <em>name</em>.</h2>
-          <div class="plaque" style="flex:0 1 auto">
-            <div class="seal">✦ Permanent Collection ✦</div>
-            <h3 class="ptitle it" id="idTitle">...</h3>
-            <div class="rule"></div>
-            <div class="lbl">Artifact</div>
-            <p class="txt" id="idArtifactName"></p>
-            <div class="lbl">From the curator</div>
-            <p class="txt serif" id="idDescription"></p>
-            <div class="lbl">What it keeps</div>
-            <p class="txt" id="idMeaning"></p>
-          </div>
-          <button class="btn" style="margin-top:16px;align-self:center" onclick="next()">I'll go make it</button>
-        </div>
-      </section>
-
-      <!-- 6 CAPTURE -->
-      <section class="panel" data-name="Capture the made thing">
-        <div class="pad">
-          <p class="eyebrow" style="color:var(--rose)">Step five · The unveiling</p>
-          <h2 class="ask" style="color:var(--plum)">You made it. Now <span style="color:var(--rose);font-style:italic">place it</span> on the pedestal.</h2>
-          <div class="dropframe" id="captureDropframe">
-            <div class="ico" id="captureIco">🖼️</div>
-            <div style="font-family:var(--serif);font-style:italic;font-size:18px;color:var(--plum)" id="captureLabel">Photograph your finished artifact</div>
-            <div class="hint" id="captureHint">Hold it to the light, one clear angle. The museum will do the rest.</div>
-            <button class="btn" onclick="document.getElementById('captureFileInput').click()">Upload the photograph</button>
-          </div>
-          <input type="file" id="captureFileInput" accept="image/*" style="display:none" onchange="handleCaptureSelect(this)">
-          <div class="status-bar" id="captureStatus"></div>
-          <button class="btn" id="enshrineBtn" style="display:none;align-self:center;margin-top:10px" onclick="enshrineArtifact()">Enshrine this artifact</button>
-        </div>
-      </section>
-
-      <!-- 7 FORGE -->
-      <section class="panel night" data-name="Forge the artifact">
-        <div class="pad" style="text-align:center">
-          <p class="eyebrow" style="text-align:center">Step six · The forging</p>
-          <div class="stage">
-            <div class="incant" id="incant">Opening the curiosity cabinet...</div>
-            <div class="scene" id="scene">
-              <div class="spot"></div>
-              <div class="gem"><span class="facet"></span><span class="facet b"></span><span class="facet c"></span></div>
-              <div class="plinth"></div>
-            </div>
-            <div id="forgecap" style="opacity:0;transition:1s">
-              <div style="font-family:var(--serif);font-style:italic;font-size:19px;color:var(--gold-bright)" id="forgeTitle">...</div>
-              <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--rose);margin-top:5px">enshrined in your museum</div>
-            </div>
-          </div>
-          <button class="btn" id="forgebtn" style="opacity:0;pointer-events:none;transition:1s" onclick="goMuseum()">Enter my museum</button>
-        </div>
-      </section>
-
-      <!-- 8 MUSEUM -->
-      <section class="panel night" data-name="Your museum">
-        <div class="pad">
-          <p class="eyebrow">The world</p>
-          <h2 class="ask">Five halls. <em>Yours.</em></h2>
-          <div class="halls" id="halls"></div>
-        </div>
-      </section>
-
-      <!-- 9 HALL -->
-      <section class="panel night" data-name="Inside the hall">
-        <div class="pad" style="padding-bottom:20px">
-          <div class="gallery" id="galleryView">
-            <div class="ghall" id="galleryTitle">Hall of Nostalgia<span>no artifacts yet</span></div>
-            <div class="gfloor"></div>
-          </div>
-          <p class="txt" style="color:#cdbfca;text-align:center;margin-top:14px;font-style:italic;font-family:var(--serif)">The museum grows every time you feel something.</p>
-        </div>
-      </section>
-
-    </div>
-  </div>
+  </div></div>
 
   <div class="nav">
     <button class="nb" id="prev" onclick="prev()">← Back</button>
     <div class="name" id="screenname"></div>
     <button class="nb" id="nextb" onclick="next()">Next →</button>
   </div>
-
-  <p class="credit">MoodMuse · connected to live backend</p>
+  <p class="credit">MoodMuse · a museum of feelings</p>
 </div>
 
 <script>
-// =====================================================================
-// CONFIG
-// =====================================================================
-// To use real Supabase auth, set both values below.
-// Leave empty to run in demo mode (no keys needed).
-const SUPABASE_URL  = '';
-const SUPABASE_ANON = '';
-const API_BASE      = '';  // same origin
+const API_BASE = '';
 
-// =====================================================================
-// AUTH — auto-skips in demo mode
-// =====================================================================
-let sb = null;
-let session = null;
-const DEMO_MODE = !SUPABASE_URL || !SUPABASE_ANON;
-
-try {
-  if (!DEMO_MODE) {
-    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-  }
-} catch(e) { console.warn('Supabase init skipped:', e); }
-
-// In demo mode, hide auth overlay immediately
-if (DEMO_MODE) {
-  session = { access_token: 'demo', user: { email: 'visitor' } };
-  document.getElementById('authOverlay').classList.add('hidden');
-  document.getElementById('userGreeting').textContent = 'Demo mode — no keys needed';
-}
-
-let authMode = 'login';
-
-function toggleAuthMode() {
-  authMode = authMode === 'login' ? 'signup' : 'login';
-  document.getElementById('authBtn').textContent = authMode === 'login' ? 'Sign in' : 'Create account';
-  document.getElementById('authToggle').textContent = authMode === 'login'
-    ? 'Need an account? Sign up'
-    : 'Already have an account? Sign in';
-  document.getElementById('authSubtext').textContent = authMode === 'login'
-    ? 'Sign in to begin your journey'
-    : 'Create an account to start collecting';
-  document.getElementById('authErr').textContent = '';
-}
-
-async function handleAuth() {
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value;
-  const errEl = document.getElementById('authErr');
-  errEl.textContent = '';
-
-  if (!email || !password) { errEl.textContent = 'Email and password required'; return; }
-
-  if (!sb) {
-    session = { access_token: 'demo', user: { email } };
-    document.getElementById('authOverlay').classList.add('hidden');
-    document.getElementById('userGreeting').textContent = email;
-    return;
-  }
-
-  const btn = document.getElementById('authBtn');
-  btn.disabled = true;
-  btn.textContent = 'Opening the doors...';
-
-  try {
-    let result;
-    if (authMode === 'signup') {
-      result = await sb.auth.signUp({ email, password });
-    } else {
-      result = await sb.auth.signInWithPassword({ email, password });
-    }
-    if (result.error) throw result.error;
-    session = result.data.session;
-    document.getElementById('authOverlay').classList.add('hidden');
-    document.getElementById('userGreeting').textContent = email;
-  } catch (err) {
-    errEl.textContent = err.message || 'Authentication failed';
-    btn.disabled = false;
-    btn.textContent = authMode === 'login' ? 'Sign in' : 'Create account';
-  }
-}
-
-(async function checkSession() {
-  if (!sb) return;
-  const { data } = await sb.auth.getSession();
-  if (data?.session) {
-    session = data.session;
-    document.getElementById('authOverlay').classList.add('hidden');
-    document.getElementById('userGreeting').textContent = session.user.email;
-  }
-})();
-
-function authHeader() {
-  if (!session) return {};
-  return { 'Authorization': 'Bearer ' + session.access_token };
-}
-
-// =====================================================================
-// STATE
-// =====================================================================
+// ---- STATE ----
 let selectedMood = 'nostalgic';
-let materialsBase64 = null;      // captured/uploaded image as data URI
-let detectedMaterials = [];      // from POST /api/materials
-let currentProject = null;       // { projectId, project, identity } from POST /api/conjure
-let captureBase64 = null;        // finished artifact photo
-let currentArtifact = null;      // from POST /api/artifact
-let museumData = null;           // from GET /api/museum
+let materialsBase64 = null;
+let detectedMaterials = [];
+let currentProject = null;
+let captureBase64 = null;
+let currentArtifact = null;
+let museumData = null;
+// Collected artifacts for the shelf (across the session)
+let shelfArtifacts = [];
 
 const MOODS = [
   ['Nostalgic','#A86A82'],['Inspired','#D6B56E'],['Curious','#9B7FB0'],['Overwhelmed','#6E8FA8'],
@@ -548,412 +530,360 @@ const MOODS = [
   ['Creative','#C98AA6'],['Reflective','#9A93A8']
 ];
 const MOOD_ICONS = {nostalgic:'🌙',inspired:'✨',curious:'🎭',overwhelmed:'🌊',healing:'🌊',hopeful:'✨',ambitious:'🔥',lonely:'🌙',creative:'✨',reflective:'🌙'};
+const HALL_NAMES = {nostalgia:'Hall of Nostalgia',dreams:'Hall of Dreams',healing:'Hall of Healing',ambition:'Hall of Ambition',curiosity:'Hall of Curiosity'};
+const incantations = ['Opening the Curiosity Cabinet...','Gathering forgotten stories...','Conjuring your artifact...','Pressing the artifact into starlight...','Writing the plaque in gold leaf...'];
 
-const incantations = [
-  'Opening the curiosity cabinet...',
-  'Gathering forgotten stories...',
-  'Searching for hidden possibilities...',
-  'Pressing the artifact into starlight...',
-  'Writing the plaque in gold leaf...',
-];
-
-// =====================================================================
-// NAVIGATION
-// =====================================================================
+// ---- NAVIGATION ----
 const panels = () => [...document.querySelectorAll('.panel')];
 let cur = 0;
-
 const rail = document.getElementById('rail');
-panels().forEach((_, i) => {
-  const d = document.createElement('div');
-  d.className = 'pip';
-  d.onclick = () => go(i);
-  rail.appendChild(d);
-});
+panels().forEach((_,i) => { const d = document.createElement('div'); d.className='pip'; d.onclick=()=>go(i); rail.appendChild(d); });
 
-function render() {
-  panels().forEach((p, i) => p.classList.toggle('on', i === cur));
-  [...rail.children].forEach((p, i) => {
-    p.className = 'pip' + (i < cur ? ' done' : '') + (i === cur ? ' active' : '');
-  });
+function render(){
+  panels().forEach((p,i) => p.classList.toggle('on', i===cur));
+  [...rail.children].forEach((p,i) => { p.className='pip'+(i<cur?' done':'')+(i===cur?' active':''); });
   document.getElementById('screenname').textContent = panels()[cur].dataset.name;
-  document.getElementById('prev').disabled = cur === 0;
-  document.getElementById('nextb').disabled = cur === panels().length - 1;
+  document.getElementById('prev').disabled = cur===0;
+  document.getElementById('nextb').disabled = cur===panels().length-1;
 }
-function go(i) { cur = Math.max(0, Math.min(panels().length - 1, i)); render(); }
-function next() { go(cur + 1); }
-function prev() { go(cur - 1); }
-document.addEventListener('keydown', e => { if (e.key === 'ArrowRight') next(); if (e.key === 'ArrowLeft') prev(); });
+function go(i){ cur=Math.max(0,Math.min(panels().length-1,i)); render(); }
+function next(){ go(cur+1); }
+function prev(){ go(cur-1); }
+document.addEventListener('keydown', e => { if(e.key==='ArrowRight')next(); if(e.key==='ArrowLeft')prev(); });
 
-// =====================================================================
-// MOOD PICKER (screen 2)
-// =====================================================================
+// ---- MOOD PICKER ----
 const mg = document.getElementById('moodgrid');
-MOODS.forEach(([name, color], i) => {
-  const b = document.createElement('button');
-  b.className = 'orb' + (i === 0 ? ' sel' : '');
-  b.innerHTML = `<span class="dot" style="background:${color};color:${color}"></span><span class="nm">${name}</span>`;
-  b.onclick = () => {
-    document.querySelectorAll('.orb').forEach(o => o.classList.remove('sel'));
-    b.classList.add('sel');
-    selectedMood = name.toLowerCase();
-  };
+MOODS.forEach(([name,color],i) => {
+  const b = document.createElement('button'); b.className='orb'+(i===0?' sel':'');
+  b.innerHTML=`<span class="dot" style="background:${color};color:${color}"></span><span class="nm">${name}</span>`;
+  b.onclick = () => { document.querySelectorAll('.orb').forEach(o=>o.classList.remove('sel')); b.classList.add('sel'); selectedMood=name.toLowerCase(); };
   mg.appendChild(b);
 });
 
-// =====================================================================
-// MATERIALS (screen 3) — camera / upload
-// =====================================================================
-let matMode = 'camera';
-let cameraStream = null;
-
-function pickMatMode(mode) {
-  matMode = mode;
-  document.getElementById('matCamera').classList.toggle('sel', mode === 'camera');
-  document.getElementById('matUpload').classList.toggle('sel', mode === 'upload');
-  document.getElementById('viewfinder').classList.toggle('visible', mode === 'camera');
-  document.getElementById('uploadZone').classList.toggle('visible', mode === 'upload');
-  if (mode === 'camera') { startCamera(); } else { stopCamera(); }
+// ---- MATERIALS ----
+let matMode='camera', cameraStream=null;
+function pickMatMode(mode){
+  matMode=mode;
+  document.getElementById('matCamera').classList.toggle('sel',mode==='camera');
+  document.getElementById('matUpload').classList.toggle('sel',mode==='upload');
+  document.getElementById('viewfinder').classList.toggle('visible',mode==='camera');
+  document.getElementById('uploadZone').classList.toggle('visible',mode==='upload');
+  if(mode==='camera') startCamera(); else stopCamera();
+}
+async function startCamera(){
+  const v=document.getElementById('cameraFeed'), p=document.getElementById('vfPlaceholder');
+  try{ cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280}}}); v.srcObject=cameraStream; p.style.display='none'; }
+  catch(e){ p.textContent='Camera unavailable. Use upload.'; }
+}
+function stopCamera(){ if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;} }
+function captureFromCamera(){
+  const v=document.getElementById('cameraFeed'); if(!v.srcObject)return null;
+  const c=document.createElement('canvas'); c.width=v.videoWidth; c.height=v.videoHeight;
+  c.getContext('2d').drawImage(v,0,0); return c.toDataURL('image/jpeg',0.85);
+}
+function handleMatFileSelect(input){
+  const f=input.files[0]; if(!f)return;
+  const r=new FileReader(); r.onload=e=>{
+    materialsBase64=e.target.result;
+    document.getElementById('uzIco').innerHTML=`<img src="${materialsBase64}" style="max-width:100%;max-height:100px;border-radius:10px">`;
+    document.getElementById('uzText').textContent=f.name; document.getElementById('uzHint').textContent='Ready to scan';
+  }; r.readAsDataURL(f);
 }
 
-async function startCamera() {
-  const video = document.getElementById('cameraFeed');
-  const placeholder = document.getElementById('vfPlaceholder');
-  try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1280 } }
-    });
-    video.srcObject = cameraStream;
-    placeholder.style.display = 'none';
-  } catch (err) {
-    placeholder.textContent = 'Camera unavailable. Use upload instead.';
-    console.warn('Camera error:', err);
-  }
-}
+async function submitMaterials(){
+  const statusEl=document.getElementById('matStatus'), btn=document.getElementById('matSubmitBtn'), chipsEl=document.getElementById('chips');
+  chipsEl.innerHTML='';
+  if(matMode==='camera'){ materialsBase64=captureFromCamera(); if(!materialsBase64){document.getElementById('matCameraInput').click();return;} stopCamera(); }
+  if(!materialsBase64){ statusEl.textContent='Please select or capture an image first'; return; }
+  btn.disabled=true;
 
-function stopCamera() {
-  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
-}
+  try{
+    // Step 1: detect materials
+    statusEl.textContent='Looking for hidden materials\u2026';
+    const matRes=await fetch(API_BASE+'/api/materials',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageBase64:materialsBase64})});
+    if(!matRes.ok) throw new Error((await matRes.json().catch(()=>({}))).error||'Detection failed');
+    detectedMaterials=(await matRes.json()).materials||[];
+    if(!detectedMaterials.length){ statusEl.textContent='No materials found. Try a clearer photo.'; btn.disabled=false; return; }
 
-function captureFromCamera() {
-  const video = document.getElementById('cameraFeed');
-  if (!video.srcObject) return null;
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
-  return canvas.toDataURL('image/jpeg', 0.85);
-}
+    statusEl.textContent='Reading the mood of the room\u2026';
+    detectedMaterials.forEach((m,i)=>{ const s=document.createElement('span'); s.className='chip'; s.textContent='\u2726 '+m; s.style.animationDelay=(i*.22)+'s'; chipsEl.appendChild(s); });
+    await new Promise(r=>setTimeout(r,1200));
 
-function handleMatFileSelect(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    materialsBase64 = e.target.result;
-    document.getElementById('uzIco').innerHTML = `<img src="${materialsBase64}" style="max-width:100%;max-height:100px;border-radius:10px">`;
-    document.getElementById('uzText').textContent = file.name;
-    document.getElementById('uzHint').textContent = 'Ready to scan';
-  };
-  reader.readAsDataURL(file);
-}
+    // Step 2: conjure project
+    const msgs=['Opening the Curiosity Cabinet\u2026','Conjuring your artifact\u2026','Writing the museum plaque\u2026'];
+    let mi=0; statusEl.textContent=msgs[0];
+    const iv=setInterval(()=>{ mi=(mi+1)%msgs.length; statusEl.textContent=msgs[mi]; },2200);
 
-async function submitMaterials() {
-  const statusEl = document.getElementById('matStatus');
-  const btn = document.getElementById('matSubmitBtn');
-  const chipsEl = document.getElementById('chips');
-  chipsEl.innerHTML = '';
-
-  if (matMode === 'camera') {
-    materialsBase64 = captureFromCamera();
-    if (!materialsBase64) { document.getElementById('matCameraInput').click(); return; }
-    stopCamera();
-  }
-  if (!materialsBase64) { statusEl.textContent = 'Please select or capture an image first'; return; }
-
-  btn.disabled = true;
-
-  try {
-    // ---- Step 1: POST /api/materials — detect materials from image ----
-    statusEl.textContent = 'The curator is examining your materials...';
-
-    const matRes = await fetch(API_BASE + '/api/materials', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageBase64: materialsBase64 }),
-    });
-    if (!matRes.ok) {
-      const err = await matRes.json().catch(() => ({}));
-      throw new Error(err.error || 'Material detection failed');
-    }
-
-    const matData = await matRes.json();
-    detectedMaterials = matData.materials || [];
-
-    // Show detected materials as chips
-    detectedMaterials.forEach((m, i) => {
-      const s = document.createElement('span');
-      s.className = 'chip';
-      s.textContent = '✦ ' + m;
-      s.style.animationDelay = (i * 0.22) + 's';
-      chipsEl.appendChild(s);
-    });
-
-    // ---- Step 2: POST /api/conjure — generate project + identity ------
-    statusEl.textContent = 'The alchemist is designing your project...';
-
-    const conjRes = await fetch(API_BASE + '/api/conjure', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ moodKey: selectedMood, materials: detectedMaterials }),
-    });
-    if (!conjRes.ok) {
-      const err = await conjRes.json().catch(() => ({}));
-      throw new Error(err.error || 'Project generation failed');
-    }
-
-    currentProject = await conjRes.json();
-    statusEl.textContent = '';
-
-    // Populate screens 4 + 5
+    const conjRes=await fetch(API_BASE+'/api/conjure',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({moodKey:selectedMood,materials:detectedMaterials})});
+    clearInterval(iv);
+    if(!conjRes.ok) throw new Error((await conjRes.json().catch(()=>({}))).error||'Generation failed');
+    currentProject=await conjRes.json();
+    statusEl.textContent='';
     populateProject(currentProject);
     populateIdentity(currentProject);
-
-    // Auto-advance after a beat
-    setTimeout(() => { btn.disabled = false; next(); }, 1200);
-
-  } catch (err) {
-    statusEl.textContent = err.message;
-    btn.disabled = false;
-  }
+    setTimeout(()=>{ btn.disabled=false; next(); },800);
+  } catch(err){ statusEl.textContent=err.message; btn.disabled=false; }
 }
 
-// =====================================================================
-// PROJECT SCREEN (4) — populate from /api/conjure response
-// =====================================================================
-function populateProject(data) {
-  const p = data.project;
-  document.getElementById('projTitle').textContent = p.title || '...';
-  document.getElementById('projConcept').innerHTML = '<em>' + (p.concept || '') + '</em>';
-  document.getElementById('projWhyLabel').textContent = 'Why this, for ' + selectedMood;
-  document.getElementById('projWhy').textContent = p.emotional_explanation || '';
-  document.getElementById('projMaterials').textContent = (p.materials_used || []).join(' · ');
-
-  const stepsEl = document.getElementById('projSteps');
-  stepsEl.innerHTML = '';
-  (p.steps || []).forEach(s => {
-    const li = document.createElement('li');
-    li.textContent = s.text || s;
-    stepsEl.appendChild(li);
-  });
-
-  document.getElementById('projTime').textContent = p.est_minutes || '--';
-  document.getElementById('projDiff').textContent = p.difficulty || '--';
-  document.getElementById('projMoodIcon').textContent = MOOD_ICONS[selectedMood] || '✦';
-  document.getElementById('projMoodLabel').textContent = selectedMood;
+// ---- PROJECT SCREEN ----
+function populateProject(data){
+  const p=data.project;
+  document.getElementById('projTitle').textContent=p.title||'...';
+  document.getElementById('projConcept').innerHTML='<em>'+(p.concept||'')+'</em>';
+  document.getElementById('projWhyLabel').textContent='Why this, for '+selectedMood;
+  document.getElementById('projWhy').textContent=p.emotional_explanation||'';
+  document.getElementById('projMaterials').textContent=(p.materials_used||[]).join(' \u00b7 ');
+  const st=document.getElementById('projSteps'); st.innerHTML='';
+  (p.steps||[]).forEach(s=>{ const li=document.createElement('li'); li.textContent=s.text||s; st.appendChild(li); });
+  document.getElementById('projTime').textContent=p.est_minutes||'--';
+  document.getElementById('projDiff').textContent=p.difficulty||'--';
+  document.getElementById('projMoodIcon').textContent=MOOD_ICONS[selectedMood]||'\u2726';
+  document.getElementById('projMoodLabel').textContent=selectedMood;
 }
 
-// =====================================================================
-// IDENTITY SCREEN (5) — populate from /api/conjure response
-// =====================================================================
-function populateIdentity(data) {
-  const id = data.identity;
-  document.getElementById('idTitle').textContent = id.museum_title || '...';
-  document.getElementById('idArtifactName').textContent = id.artifact_name || '';
-  document.getElementById('idDescription').textContent = id.museum_description || '';
-  document.getElementById('idMeaning').textContent = id.artifact_meaning || '';
+// ---- IDENTITY SCREEN ----
+function populateIdentity(data){
+  const id=data.identity;
+  document.getElementById('idTitle').textContent=id.museum_title||'...';
+  document.getElementById('idArtifactName').textContent=id.artifact_name||'';
+  document.getElementById('idDescription').textContent=id.museum_description||'';
+  document.getElementById('idMeaning').textContent=id.artifact_meaning||'';
 }
 
-// =====================================================================
-// CAPTURE SCREEN (6) — upload finished artifact photo
-// =====================================================================
-function handleCaptureSelect(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    captureBase64 = e.target.result;
-    document.getElementById('captureIco').innerHTML = `<img src="${captureBase64}" style="max-width:100%;max-height:140px;border-radius:10px">`;
-    document.getElementById('captureLabel').textContent = file.name;
-    document.getElementById('captureHint').textContent = 'Ready to enshrine';
-    document.getElementById('enshrineBtn').style.display = 'block';
-  };
-  reader.readAsDataURL(file);
+// ---- CAPTURE ----
+function handleCaptureSelect(input){
+  const f=input.files[0]; if(!f)return;
+  const r=new FileReader(); r.onload=e=>{
+    captureBase64=e.target.result;
+    document.getElementById('captureIco').innerHTML=`<img src="${captureBase64}" style="max-width:100%;max-height:140px;border-radius:10px">`;
+    document.getElementById('captureLabel').textContent=f.name;
+    document.getElementById('captureHint').textContent='Ready to enshrine';
+    document.getElementById('enshrineBtn').style.display='block';
+  }; r.readAsDataURL(f);
 }
 
-async function enshrineArtifact() {
-  if (!currentProject) return;
+async function enshrineArtifact(){
+  if(!currentProject)return;
+  const statusEl=document.getElementById('captureStatus'), btn=document.getElementById('enshrineBtn');
+  btn.disabled=true; statusEl.textContent='Reading your creation\u2026';
 
-  const statusEl = document.getElementById('captureStatus');
-  const btn = document.getElementById('enshrineBtn');
-  btn.disabled = true;
-  statusEl.textContent = 'Preparing the pedestal...';
+  try{
+    // Create artifact on server
+    const res=await fetch(API_BASE+'/api/artifact',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({projectId:currentProject.projectId,moodKey:selectedMood,identity:currentProject.identity})});
+    if(!res.ok) throw new Error((await res.json().catch(()=>({}))).error||'Failed');
+    currentArtifact=await res.json();
+    currentArtifact.identity=currentProject.identity;
+    currentArtifact.mood=selectedMood;
+    currentArtifact.originalImageUrl=captureBase64;
+    // Use the pre-made mock artifact image
+    currentArtifact.stylizedImageUrl='/artifact-mock.png';
 
-  try {
-    const res = await fetch(API_BASE + '/api/artifact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        projectId: currentProject.projectId,
-        moodKey: selectedMood,
-        identity: currentProject.identity,
-        sourceImageUrl: null,
-      }),
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Enshrinement failed');
-    }
-
-    currentArtifact = await res.json();
-    statusEl.textContent = '';
-    next(); // go to forge screen
+    statusEl.textContent='';
+    next();
     runForgeAnimation();
-
-  } catch (err) {
-    statusEl.textContent = err.message;
-    btn.disabled = false;
-  }
+  } catch(err){ statusEl.textContent=err.message; btn.disabled=false; }
 }
 
-// =====================================================================
-// FORGE SCREEN (7) — animation + reveal
-// =====================================================================
-function runForgeAnimation() {
-  const inc = document.getElementById('incant');
-  const scene = document.getElementById('scene');
-  const cap = document.getElementById('forgecap');
-  const btn = document.getElementById('forgebtn');
-  const title = document.getElementById('forgeTitle');
+// ---- FORGE — cinematic transition ----
+function runForgeAnimation(){
+  const inc=document.getElementById('incant');
+  const origWrap=document.getElementById('forgeOrigWrap');
+  const origImg=document.getElementById('forgeOrigImg');
+  const origOverlay=document.getElementById('forgeOrigOverlay');
+  const scene=document.getElementById('scene');
+  const card=document.getElementById('forgeCard');
+  const cap=document.getElementById('forgecap');
+  const btn=document.getElementById('forgebtn');
+  const title=document.getElementById('forgeTitle');
 
-  scene.classList.add('forming');
-  cap.style.opacity = 0;
-  btn.style.opacity = 0;
-  btn.style.pointerEvents = 'none';
+  title.textContent=currentProject?.identity?.museum_title||'The Stars She Took With Her';
+  cap.style.opacity=0; btn.style.opacity=0; btn.style.pointerEvents='none';
+  card.style.display='none'; card.style.opacity=0;
+  scene.style.display='none';
 
-  title.textContent = currentProject?.identity?.museum_title || '...';
+  // Phase 1: Show uploaded photo
+  origImg.src=captureBase64||'';
+  origImg.style.transform='scale(1)'; origImg.style.filter='none'; origImg.style.opacity='1';
+  origOverlay.style.background='radial-gradient(circle,rgba(214,181,110,0) 0%,rgba(214,181,110,0) 100%)';
+  origWrap.style.display='block';
+  inc.textContent='Reading your creation\u2026';
 
-  let i = 0;
-  inc.textContent = incantations[0];
-  clearInterval(window._fg);
-  window._fg = setInterval(() => {
-    i++;
-    if (i < incantations.length) {
-      inc.textContent = incantations[i];
-    } else {
-      clearInterval(window._fg);
+  const steps=[
+    // Phase 2: glow + shrink the photo
+    {t:1800, fn:()=>{
+      inc.textContent='Forging your museum artifact\u2026';
+      origImg.style.transform='scale(0.85)';
+      origImg.style.filter='brightness(1.2) saturate(0.7)';
+      origOverlay.style.background='radial-gradient(circle,rgba(214,181,110,.3) 0%,rgba(168,106,130,.2) 100%)';
+    }},
+    // Phase 3: blur + gold wash
+    {t:3600, fn:()=>{
+      inc.textContent='Pressing the artifact into starlight\u2026';
+      origImg.style.transform='scale(0.7)';
+      origImg.style.filter='blur(4px) brightness(1.5) saturate(0.3)';
+      origOverlay.style.background='radial-gradient(circle,rgba(214,181,110,.7) 0%,rgba(75,50,79,.6) 100%)';
+    }},
+    // Phase 4: swap — hide photo, show gem spinner briefly
+    {t:5200, fn:()=>{
+      inc.textContent='Conjuring your artifact\u2026';
+      origWrap.style.display='none';
+      scene.style.display=''; scene.classList.add('forming');
+    }},
+    // Phase 5: reveal the mock artifact
+    {t:7000, fn:()=>{
+      inc.textContent='Writing the plaque in gold leaf\u2026';
       scene.classList.remove('forming');
-      inc.textContent = 'It is enshrined.';
-      cap.style.opacity = 1;
-      btn.style.opacity = 1;
-      btn.style.pointerEvents = 'auto';
+    }},
+    // Phase 6: final reveal
+    {t:8500, fn:()=>{
+      scene.style.display='none';
+      card.src=currentArtifact?.stylizedImageUrl||'/artifact-mock.png';
+      card.style.display='block';
+      // Trigger reflow then animate in
+      requestAnimationFrame(()=>{
+        card.style.opacity='1';
+        card.style.transform='scale(1)';
+      });
+      inc.textContent='It is enshrined.';
+      cap.style.opacity=1; btn.style.opacity=1; btn.style.pointerEvents='auto';
+    }},
+  ];
+
+  // Pre-set card for scale-up entrance
+  card.style.transform='scale(0.8)';
+  card.style.transition='all 1s cubic-bezier(.2,.7,.2,1)';
+
+  clearTimeout(window._fg1);clearTimeout(window._fg2);clearTimeout(window._fg3);clearTimeout(window._fg4);clearTimeout(window._fg5);
+  steps.forEach((s,idx)=>{ window['_fg'+idx]=setTimeout(s.fn, s.t); });
+}
+
+// ---- MUSEUM SHELF ----
+async function goMuseum(){
+  // Add current artifact to shelf (always — uses original photo as fallback)
+  if(currentArtifact){
+    // Avoid duplicates
+    if(!shelfArtifacts.find(a=>a.artifactId===currentArtifact.artifactId)){
+      shelfArtifacts.push({...currentArtifact});
     }
-  }, 1100);
+  }
+  // Also try loading from server (non-blocking)
+  try{
+    const res=await fetch(API_BASE+'/api/museum');
+    if(res.ok) museumData=await res.json();
+  }catch(e){}
+
+  renderShelf();
+  go(7);
 }
 
-// =====================================================================
-// MUSEUM SCREEN (8) — load from GET /api/museum
-// =====================================================================
-async function goMuseum() {
-  go(7); // museum panel index
-  await loadMuseum();
-}
+function renderShelf(){
+  const wrap=document.getElementById('musShelves'), empty=document.getElementById('shelfEmpty');
+  wrap.querySelectorAll('.mus-shelf,.mus-shelf-bar').forEach(e=>e.remove());
 
-async function loadMuseum() {
-  const hallsEl = document.getElementById('halls');
-  hallsEl.innerHTML = '';
+  // Merge local + server artifacts
+  const allArts=[...shelfArtifacts];
+  if(museumData?.halls){
+    museumData.halls.forEach(h=>{ h.artifacts?.forEach(a=>{
+      if(!allArts.find(x=>x.artifactId===a.id)){
+        const imgUrl=a.stylized_image_url||a.source_image_url;
+        if(imgUrl){
+          allArts.push({artifactId:a.id,stylizedImageUrl:imgUrl,originalImageUrl:a.source_image_url,
+            identity:{artifact_name:a.artifact_name,museum_title:a.museum_title,museum_description:a.museum_description,artifact_meaning:a.artifact_meaning,hall_key:a.hall_key||h.key},
+            mood:a.mood_key});
+        }
+      }
+    }); });
+  }
 
-  try {
-    const res = await fetch(API_BASE + '/api/museum');
-    if (!res.ok) throw new Error('Failed to load museum');
-    museumData = await res.json();
+  if(!allArts.length){ empty.style.display=''; return; }
+  empty.style.display='none';
 
-    (museumData.halls || []).forEach((hall, idx) => {
-      const count = hall.artifacts?.length || 0;
-      const desc = count > 0
-        ? `${count} artifact${count > 1 ? 's' : ''}`
-        : 'empty · awaiting a feeling';
-
-      const d = document.createElement('div');
-      d.className = 'door';
-      d.innerHTML = `<span class="em">${hall.emoji}</span><div class="info"><div class="hn">${hall.name}</div><div class="hc">${desc}</div></div><span class="curtain"></span>`;
-      d.onclick = () => openHall(idx);
-      hallsEl.appendChild(d);
+  for(let i=0;i<allArts.length;i+=3){
+    const shelf=document.createElement('div'); shelf.className='mus-shelf'; shelf.style.position='relative';
+    const spot=document.createElement('div'); spot.className='mus-spotlight'; shelf.appendChild(spot);
+    allArts.slice(i,i+3).forEach(art=>{
+      const id=art.identity||{};
+      const name=id.artifact_name||id.museum_title||'Artifact';
+      const mood=art.mood||'';
+      const room=HALL_NAMES[id.hall_key]||'';
+      const imgSrc=art.stylizedImageUrl||art.originalImageUrl||'';
+      const card=document.createElement('div'); card.className='tarot';
+      card.onclick=()=>openArtifactModal(art);
+      card.innerHTML=`
+        <div class="tarot-frame">
+          <img src="${imgSrc}" alt="${name}">
+          <div class="tarot-glyph">${MOOD_ICONS[mood]||'\u2726'}</div>
+        </div>
+        <div class="tarot-name">${name}</div>
+        <div class="tarot-room">${room}</div>`;
+      shelf.appendChild(card);
     });
-  } catch (err) {
-    hallsEl.innerHTML = `<p style="color:#c9bcc7;text-align:center;font-style:italic">${err.message}</p>`;
+    wrap.appendChild(shelf);
+    const bar=document.createElement('div'); bar.className='mus-shelf-bar';
+    wrap.appendChild(bar);
+  }
+  spawnMuseumParticles();
+}
+
+// ---- ARTIFACT MODAL (with editable name) ----
+let modalArtRef=null;
+function openArtifactModal(art){
+  modalArtRef=art;
+  const id=art.identity||{};
+  document.getElementById('modalCardImg').src=art.stylizedImageUrl||art.originalImageUrl||'';
+  document.getElementById('modalNameInput').value=id.artifact_name||id.museum_title||'Artifact';
+  document.getElementById('modalMood').textContent=(MOOD_ICONS[art.mood]||'\u2726')+' '+(art.mood||'').toUpperCase()+' \u00b7 PERMANENT COLLECTION';
+  document.getElementById('modalDesc').textContent=id.museum_description||'';
+  document.getElementById('modalMeaning').textContent=id.artifact_meaning||'';
+  document.getElementById('modalRoom').textContent='\u2726 '+(HALL_NAMES[id.hall_key]||'')+' \u2726';
+  const origImg=document.getElementById('modalOrigImg');
+  if(art.originalImageUrl){ origImg.src=art.originalImageUrl; origImg.parentElement.style.display=''; }
+  else{ origImg.parentElement.style.display='none'; }
+  document.getElementById('modalBg').classList.add('open');
+}
+function saveArtifactName(){
+  if(!modalArtRef)return;
+  const newName=document.getElementById('modalNameInput').value.trim();
+  if(!newName)return;
+  if(modalArtRef.identity) modalArtRef.identity.artifact_name=newName;
+  // Update shelf card immediately
+  renderShelf();
+  // Brief visual feedback
+  const saveBtn=document.getElementById('modalSaveBtn');
+  saveBtn.textContent='Saved \u2726'; setTimeout(()=>{ saveBtn.textContent='Save'; },1200);
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('open'); modalArtRef=null; }
+
+// ---- MUSEUM PARTICLES ----
+function spawnMuseumParticles(){
+  const container=document.getElementById('museumParticles');
+  container.innerHTML='';
+  for(let i=0;i<18;i++){
+    const p=document.createElement('div'); p.className='mp';
+    p.style.left=Math.random()*100+'%';
+    p.style.top=(30+Math.random()*65)+'%';
+    p.style.animationDelay=(Math.random()*4)+'s';
+    p.style.animationDuration=(3+Math.random()*3)+'s';
+    p.style.width=p.style.height=(1+Math.random()*1.5)+'px';
+    container.appendChild(p);
   }
 }
 
-// =====================================================================
-// HALL / GALLERY SCREEN (9) — show artifacts in selected hall
-// =====================================================================
-function openHall(idx) {
-  const hall = museumData.halls[idx];
-  if (!hall) return;
-
-  const gallery = document.getElementById('galleryView');
-  const titleEl = document.getElementById('galleryTitle');
-  gallery.querySelectorAll('.exhibit').forEach(el => el.remove());
-
-  const count = hall.artifacts?.length || 0;
-  titleEl.innerHTML = `${hall.name}<span>${hall.emoji} ${count} artifact${count !== 1 ? 's' : ''}</span>`;
-
-  const positions = ['12%', '30%', '50%', '70%', '88%'];
-  (hall.artifacts || []).slice(0, 5).forEach((art, i) => {
-    const exhibit = document.createElement('div');
-    exhibit.className = 'exhibit';
-    exhibit.style.left = positions[i] || '50%';
-    if (i === Math.floor(count / 2)) exhibit.style.transform = 'translateX(-50%)';
-    const size = i === Math.floor(count / 2) ? 'width:38px;height:50px' : 'width:30px;height:40px';
-    exhibit.innerHTML = `
-      <div class="minigem" style="${size}"></div>
-      <div class="miniplinth"></div>
-      <div class="miniplaque">${art.museum_title || art.artifact_name || 'Unnamed'}</div>
-    `;
-    gallery.appendChild(exhibit);
-  });
-
-  if (count === 0) {
-    const empty = document.createElement('div');
-    empty.className = 'exhibit';
-    empty.style.left = '50%';
-    empty.style.transform = 'translateX(-50%)';
-    empty.innerHTML = '<div class="miniplaque" style="font-size:11px;color:#c9bcc7">This hall awaits its first artifact</div>';
-    gallery.appendChild(empty);
-  }
-
-  go(8);
-}
-
-// =====================================================================
-// INIT
-// =====================================================================
+// ---- INIT ----
 render();
 </script>
 
 <script>
-// Ambient starfield (unchanged)
-const cv = document.getElementById('stars'), ctx = cv.getContext('2d');
-let W, H, stars = [];
-function size() {
-  W = cv.width = innerWidth; H = cv.height = innerHeight;
-  stars = Array.from({ length: Math.floor(W * H / 9000) }, () => ({
-    x: Math.random() * W, y: Math.random() * H,
-    r: Math.random() * 1.3 + .3, p: Math.random() * 6.28, s: Math.random() * .02 + .004
-  }));
-}
-size(); addEventListener('resize', size);
-const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
-function draw(t) {
-  ctx.clearRect(0, 0, W, H);
-  for (const s of stars) {
-    const a = reduce ? .6 : (Math.sin(t * s.s + s.p) * .5 + .5);
-    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.28);
-    ctx.fillStyle = `rgba(231,225,215,${.15 + a * .65})`; ctx.fill();
-  }
-  if (!reduce) requestAnimationFrame(draw);
-}
-if (reduce) draw(0); else requestAnimationFrame(draw);
+// Starfield
+const cv=document.getElementById('stars'),ctx=cv.getContext('2d');
+let W,H,stars=[];
+function size(){W=cv.width=innerWidth;H=cv.height=innerHeight;
+  stars=Array.from({length:Math.floor(W*H/9000)},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.3+.3,p:Math.random()*6.28,s:Math.random()*.02+.004}));}
+size();addEventListener('resize',size);
+const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+function draw(t){ctx.clearRect(0,0,W,H);for(const s of stars){const a=reduce?.6:(Math.sin(t*s.s+s.p)*.5+.5);
+  ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.28);ctx.fillStyle=`rgba(231,225,215,${.15+a*.65})`;ctx.fill();}
+  if(!reduce)requestAnimationFrame(draw);}
+if(reduce)draw(0);else requestAnimationFrame(draw);
 </script>
