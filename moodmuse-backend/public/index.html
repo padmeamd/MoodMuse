@@ -781,17 +781,16 @@ function renderShelf(){
   const wrap=document.getElementById('musShelves'), empty=document.getElementById('shelfEmpty');
   wrap.querySelectorAll('.mus-shelf,.mus-shelf-bar').forEach(e=>e.remove());
 
-  // Merge local + server artifacts
+  // Merge local + server artifacts (local takes priority)
   const allArts=[...shelfArtifacts];
   if(museumData?.halls){
     museumData.halls.forEach(h=>{ h.artifacts?.forEach(a=>{
       if(!allArts.find(x=>x.artifactId===a.id)){
-        const imgUrl=a.stylized_image_url||a.source_image_url;
-        if(imgUrl){
-          allArts.push({artifactId:a.id,stylizedImageUrl:imgUrl,originalImageUrl:a.source_image_url,
-            identity:{artifact_name:a.artifact_name,museum_title:a.museum_title,museum_description:a.museum_description,artifact_meaning:a.artifact_meaning,hall_key:a.hall_key||h.key},
-            mood:a.mood_key});
-        }
+        allArts.push({artifactId:a.id,
+          stylizedImageUrl:a.stylized_image_url||'/artifact-mock.png',
+          originalImageUrl:a.source_image_url,
+          identity:{artifact_name:a.artifact_name,museum_title:a.museum_title,museum_description:a.museum_description,artifact_meaning:a.artifact_meaning,hall_key:a.hall_key||h.key},
+          mood:a.mood_key});
       }
     }); });
   }
@@ -807,7 +806,7 @@ function renderShelf(){
       const name=id.artifact_name||id.museum_title||'Artifact';
       const mood=art.mood||'';
       const room=HALL_NAMES[id.hall_key]||'';
-      const imgSrc=art.stylizedImageUrl||art.originalImageUrl||'';
+      const imgSrc=art.stylizedImageUrl||'/artifact-mock.png';
       const card=document.createElement('div'); card.className='tarot';
       card.onclick=()=>openArtifactModal(art);
       card.innerHTML=`
@@ -831,7 +830,7 @@ let modalArtRef=null;
 function openArtifactModal(art){
   modalArtRef=art;
   const id=art.identity||{};
-  document.getElementById('modalCardImg').src=art.stylizedImageUrl||art.originalImageUrl||'';
+  document.getElementById('modalCardImg').src=art.stylizedImageUrl||'/artifact-mock.png';
   document.getElementById('modalNameInput').value=id.artifact_name||id.museum_title||'Artifact';
   document.getElementById('modalMood').textContent=(MOOD_ICONS[art.mood]||'\u2726')+' '+(art.mood||'').toUpperCase()+' \u00b7 PERMANENT COLLECTION';
   document.getElementById('modalDesc').textContent=id.museum_description||'';
